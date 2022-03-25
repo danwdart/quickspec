@@ -99,7 +99,7 @@ makeHermitian :: T -> T
 makeHermitian m = m + {-fmap conjugate-} transpose m
 
 isHermitian :: T -> Bool
-isHermitian m = m == {-fmap conjugate-} (transpose m)
+isHermitian m = m == {-fmap conjugate-} transpose m
 
 genHermitian :: Gen T
 genHermitian = makeHermitian <$> arbitrary

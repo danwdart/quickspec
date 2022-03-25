@@ -99,33 +99,33 @@ prettyPropQC ::
   (Typed fun, Apply (Term fun), PrettyTerm fun) =>
   Type -> (Type -> Bool) -> Int -> (Type -> [String]) -> Prop (Term fun) -> Doc
 prettyPropQC default_to was_observed nth cands x
-  = hang (text first_char <+> text "(" <+> (text $ show $ show $ pPrint law)) 2
+  = hang (text first_char <+> text "(" <+> text (show $ show $ pPrint law)) 2
   $ hang (hsep [text ",", text "property", text "$"]) 4
   $ hang ppr_binds 4
   $ (ppr_ctx <+> with_sig lhs lhs_type <+> eq_fn <+> pPrint rhs) <> text ")"
   where
+with_sig expr = print_sig (pPrint expr)
     eq = "==="
-    obs_eq = "=~="
-    eq_fn = text $ bool eq obs_eq $ was_observed lhs_type
-    lhs_type = typ lhs_for_type
+obs_eq = "=~="
+eq_fn = text $ bool eq obs_eq $ was_observed lhs_type
+lhs_type = typ lhs_for_type
 
-    first_char =
-      case nth of
-        1 -> "["
-        _ -> ","
-    ppr_ctx =
-      case length ctx of
-        0 -> pPrintEmpty
-        _ -> hsep (punctuate (text " &&") $ fmap (parens . pPrint) ctx) <+> text "==>"
+first_char =
+  case nth of
+    1 -> "["
+    _ -> ","
+ppr_ctx =
+  case length ctx of
+    0 -> pPrintEmpty
+    _ -> hsep (punctuate (text " &&") $ fmap (parens . pPrint) ctx) <+> text "==>"
 
-    (_ :=>: (lhs_for_type :=: _)) = x
-    (var_defs, law@(ctx :=>: (lhs :=: rhs))) = nameVars cands x
-    with_sig expr ty = print_sig (pPrint expr) ty
-    print_sig doc ty = parens $ doc <+> text "::" <+> pPrintType (defaultTo default_to ty)
-    ppr_binds =
-      case Map.size var_defs of
-        0 -> pPrintEmpty
-        _ -> (text "\\ " <> sep (fmap ((uncurry print_sig) . (first text)) (Map.assocs var_defs))) <+> text "->"
+(_ :=>: (lhs_for_type :=: _)) = x
+(var_defs, law@(ctx :=>: (lhs :=: rhs))) = nameVars cands x
+print_sig doc ty = parens $ doc <+> text "::" <+> pPrintType (defaultTo default_to ty)
+ppr_binds =
+  case Map.size var_defs of
+    0 -> pPrintEmpty
+    _ -> (text "\\ " <> sep (fmap (uncurry print_sig . first text) (Map.assocs var_defs))) <+> text "->"
 
 
 data Named fun = Name String | Ordinary fun

@@ -17,6 +17,7 @@ import           Data.Lens.Light
 import           Data.Proxy
 import           Data.Semigroup                         (Semigroup (..))
 import           QuickSpec.Internal.Explore.Schemas     (VariableUse (..))
+import qualified QuickSpec.Internal.Haskell             as Haskell
 import           QuickSpec.Internal.Haskell             (FriendlyPredicateTestCase,
                                                          HasFriendly,
                                                          Names (..),
@@ -24,7 +25,6 @@ import           QuickSpec.Internal.Haskell             (FriendlyPredicateTestCa
                                                          PredicateTestCase,
                                                          Predicateable,
                                                          Use (..))
-import qualified QuickSpec.Internal.Haskell             as Haskell
 import qualified QuickSpec.Internal.Haskell.Resolve     as Haskell
 import           QuickSpec.Internal.Prop
 import qualified QuickSpec.Internal.Pruning.UntypedTwee as Twee

@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeApplications #-}
+
 -- A test for conditions.
 -- Many laws for zip only hold when the arguments have the same
 -- length.

@@ -23,11 +23,11 @@ import           QuickSpec.Internal.Term
 import           QuickSpec.Internal.Terminal
 import           QuickSpec.Internal.Testing
 import           QuickSpec.Internal.Type
-import           Twee                             hiding (Config (..))
 import qualified Twee
+import           Twee                             hiding (Config (..))
+import qualified Twee.Base                        as Twee
 import           Twee.Base                        (Arity (..), Labelled,
                                                    Ordered (..))
-import qualified Twee.Base                        as Twee
 import qualified Twee.Equation                    as Twee
 import qualified Twee.KBO                         as KBO
 import           Twee.Proof                       hiding (Config, defaultConfig)

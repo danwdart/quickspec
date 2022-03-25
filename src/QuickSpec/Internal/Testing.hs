@@ -1,10 +1,10 @@
 -- A type of test case generators.
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE DefaultSignatures      #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE GADTs                  #-}
-{-# LANGUAGE UndecidableInstances   #-}
+{-# LANGUAGE DefaultSignatures    #-}
+{-# LANGUAGE FlexibleInstances    #-}
+
+{-# LANGUAGE GADTs                #-}
+{-# LANGUAGE UndecidableInstances #-}
 module QuickSpec.Internal.Testing where
 
 import           Control.Monad.Trans.Class

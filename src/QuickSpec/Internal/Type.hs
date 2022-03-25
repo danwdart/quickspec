@@ -389,11 +389,11 @@ instance (Typed a, Typed b) => Typed (Either a b) where
   typeSubst_ sub (Right x) = Right (typeSubst_ sub x)
 
 instance Typed a => Typed [a] where
+typeSubst_ f = map (typeSubst_ f)
   typ []    = typeOf ()
-  typ (x:_) = typ x
-  otherTypesDL []     = mzero
-  otherTypesDL (x:xs) = otherTypesDL x `mplus` msum (map typesDL xs)
-  typeSubst_ f xs = map (typeSubst_ f) xs
+typ (x:_) = typ x
+otherTypesDL []     = mzero
+otherTypesDL (x:xs) = otherTypesDL x `mplus` msum (map typesDL xs)
 
 -- | Represents a forall-quantifier over all the type variables in a type.
 -- Wrapping a term in @Poly@ normalises the type by alpha-renaming
@@ -432,7 +432,7 @@ polyPair = polyApply (,)
 
 -- | Rename the type variables of all arguments so that they don't overlap.
 polyList :: Typed a => [Poly a] -> Poly [a]
-polyList xs = foldr (polyApply (:)) (poly []) xs
+polyList = foldr (polyApply (:)) (poly [])
 
 -- | Find the most general unifier of two types.
 polyMgu :: Poly Type -> Poly Type -> Maybe (Poly Type)

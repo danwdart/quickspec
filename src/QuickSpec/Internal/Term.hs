@@ -1,17 +1,17 @@
 -- | This module is internal to QuickSpec.
 --
 -- Typed terms and operations on them.
-{-# LANGUAGE ConstraintKinds        #-}
-{-# LANGUAGE DeriveFunctor          #-}
-{-# LANGUAGE DeriveGeneric          #-}
-{-# LANGUAGE FlexibleContexts       #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE PatternSynonyms        #-}
-{-# LANGUAGE TypeFamilies           #-}
-{-# LANGUAGE TypeOperators          #-}
-{-# LANGUAGE UndecidableInstances   #-}
-{-# LANGUAGE ViewPatterns           #-}
+{-# LANGUAGE ConstraintKinds      #-}
+{-# LANGUAGE DeriveFunctor        #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE FlexibleInstances    #-}
+
+{-# LANGUAGE PatternSynonyms      #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns         #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 module QuickSpec.Internal.Term(module QuickSpec.Internal.Term, module Twee.Base, module Twee.Pretty) where
 
@@ -43,7 +43,7 @@ instance CoArbitrary Var where
   coarbitrary = coarbitrary . var_id
 
 instance Typed Var where
-  typ x = var_ty x
+  typ = var_ty
   otherTypesDL _ = mzero
   typeSubst_ sub (V ty x) = V (typeSubst_ sub ty) x
 

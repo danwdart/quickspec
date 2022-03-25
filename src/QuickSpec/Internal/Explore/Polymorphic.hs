@@ -25,9 +25,9 @@ import qualified Data.Map.Strict                    as Map
 import           Data.Maybe
 import           Data.Set                           (Set)
 import qualified Data.Set                           as Set
+import qualified QuickSpec.Internal.Explore.Schemas as Schemas
 import           QuickSpec.Internal.Explore.Schemas (Result (..), Schemas,
                                                      VariableUse (..))
-import qualified QuickSpec.Internal.Explore.Schemas as Schemas
 import           QuickSpec.Internal.Prop
 import           QuickSpec.Internal.Pruning
 import           QuickSpec.Internal.Term

@@ -86,14 +86,14 @@ compile1 (Plus r) start end = do
 
 compile :: Ord a => Regex a -> NFA a
 compile r = NFA (close (foldr enter M.empty epsilons)) (foldr flatten M.empty edges) (State 0) (State 1)
-  where (edges, epsilons, _) = execState (compile1 r (State 0) (State 1)) ([], [], State 2)
-        flatten (start, edge, to) edges = M.insertWith (++) (start, edge) [to] edges
-        enter (from, to) epsilons = M.insertWith (++) from [to] epsilons
+  where
+flatten (start, edge, to) = M.insertWith (++) (start, edge) [to]
+enter (from, to) = M.insertWith (++) from [to] (edges, epsilons, _) = execState (compile1 r (State 0) (State 1)) ([], [], State 2)
 
 close :: Ord a => Map a [a] -> Map a [a]
 close m | null xs = m
         | otherwise = close (foldr enter m xs)
-        where enter (from, to) epsilons = M.insertWith (++) from [to] epsilons
+        where enter (from, to) = M.insertWith (++) from [to]
               xs = nub' (close1 m)
 
 close1 m = do

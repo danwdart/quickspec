@@ -2,7 +2,7 @@
 {-# OPTIONS_HADDOCK hide #-}
 {-# LANGUAGE DefaultSignatures          #-}
 {-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE FunctionalDependencies     #-}
+
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE UndecidableInstances       #-}

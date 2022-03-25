@@ -17,8 +17,8 @@ import           Data.Maybe
 import           Data.Ord
 import           Data.Set                         (Set)
 import qualified Data.Set                         as Set
-import           QuickSpec.Internal.Explore.Terms (Terms)
 import qualified QuickSpec.Internal.Explore.Terms as Terms
+import           QuickSpec.Internal.Explore.Terms (Terms)
 import           QuickSpec.Internal.Prop
 import           QuickSpec.Internal.Pruning
 import           QuickSpec.Internal.Term

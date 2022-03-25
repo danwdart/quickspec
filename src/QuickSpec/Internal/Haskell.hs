@@ -1,19 +1,19 @@
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE DataKinds              #-}
-{-# LANGUAGE FlexibleContexts       #-}
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE GADTs                  #-}
-{-# LANGUAGE PatternGuards          #-}
-{-# LANGUAGE RankNTypes             #-}
-{-# LANGUAGE ScopedTypeVariables    #-}
-{-# LANGUAGE TypeFamilies           #-}
-{-# LANGUAGE TypeOperators          #-}
+{-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE FlexibleContexts     #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE GADTs                #-}
+{-# LANGUAGE PatternGuards        #-}
+{-# LANGUAGE RankNTypes           #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE TypeOperators        #-}
 
-{-# LANGUAGE ConstraintKinds        #-}
-{-# LANGUAGE DefaultSignatures      #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE RecordWildCards        #-}
-{-# LANGUAGE UndecidableInstances   #-}
+{-# LANGUAGE ConstraintKinds      #-}
+{-# LANGUAGE DefaultSignatures    #-}
+
+{-# LANGUAGE RecordWildCards      #-}
+{-# LANGUAGE UndecidableInstances #-}
 module QuickSpec.Internal.Haskell where
 
 import           Control.Monad
@@ -40,8 +40,8 @@ import           Data.Void
 import           Data.Word
 import           GHC.TypeLits
 import           Numeric.Natural
-import           QuickSpec.Internal.Explore              hiding (quickSpec)
 import qualified QuickSpec.Internal.Explore
+import           QuickSpec.Internal.Explore              hiding (quickSpec)
 import           QuickSpec.Internal.Explore.Conditionals hiding (Normal)
 import           QuickSpec.Internal.Explore.Polymorphic  (Universe (..),
                                                           VariableUse (..))
@@ -218,9 +218,9 @@ instance (Observe xt xo x, Observe yt yo y, Observe zt zo z, Observe wt wo w)
   observe (xt, yt, zt, wt) (x, y, z, w)
     = (observe xt x, observe yt y, observe zt z, observe wt w)
 instance Observe t p a => Observe t [p] [a] where
-  observe t ps = fmap (observe t) ps
+  observe t = fmap (observe t)
 instance Observe t p a => Observe t (NonEmpty p) (NonEmpty a) where
-  observe t ps = fmap (observe t) ps
+  observe t = fmap (observe t)
 instance Observe t p a => Observe (t, t) (p, p) (Complex a) where
   observe (t1, t2) (p1 :+ p2) = (observe t1 p1, observe t2 p2)
 instance Observe t p a => Observe (t, t) (p, p) (Ratio a) where
@@ -372,7 +372,7 @@ arbitraryFunction gen = promote (\x -> coarbitrary x (gen x))
 evalHaskell :: Type -> Instances -> TestCase -> Term Constant -> Either (Value Ordy) (Term Constant)
 evalHaskell def insts (TestCase env obs) t =
   maybe (Right t) Left $ do
-    let eval env t = evalTerm env (evalConstant insts) t
+    let eval env = evalTerm env (evalConstant insts)
     Identity val `In` w <- unwrap <$> eval env (defaultTo def t)
     res <- obs (wrap w (Identity val))
     -- Don't allow partial results to enter the decision tree
@@ -567,7 +567,7 @@ unfriendlyPredicateGen name pred gen =
     select i =
       fromJust (cast (arrowType [ty] (typeArgs (typeOf pred) !! i)) (unPoly (compose (sel i) unwrapV)))
       where
-        compose f g = apply (apply cmpV f) g
+        compose f = apply (apply cmpV f)
         sel 0 = fstV
         sel n = compose (sel (n-1)) sndV
         fstV = toPolyValue (fst :: (A, B) -> A)
@@ -807,7 +807,7 @@ quickSpec cfg@Config{..} = do
           putLine "quickspec_laws ="
       let
         pres prop = do
-          modify $ Data.Bifunctor.second ((:) prop)
+          modify $ Data.Bifunctor.second (prop :)
           if n == 0 then return () else present (constantsOf f) prop
       QuickSpec.Internal.Explore.quickSpec pres (flip eval) cfg_max_size cfg_max_commutative_size use univ
         (enumerator (map Fun (constantsOf g)))
@@ -823,8 +823,7 @@ quickSpec cfg@Config{..} = do
         round n = mainOf n (concat . take 1 . drop n) (concat . take (n+1))
         rounds = length cfg_constants
 
-  withStdioTerminal =<< (
-    generate $
+  withStdioTerminal =<< generate (
     QuickCheck.run cfg_quickCheck (arbitraryTestCase cfg_default_to instances) eval $
     Twee.run cfg_twee { Twee.cfg_max_term_size = Twee.cfg_max_term_size cfg_twee `max` cfg_max_size } $
     runConditionals constants $

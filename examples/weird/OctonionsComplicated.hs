@@ -15,9 +15,9 @@ import           Data.Ord
 import           Data.Ratio
 import           Prelude                hiding ((/))
 import qualified Prelude
+import qualified QuickSpec              as QS
 import           QuickSpec              hiding (Result, apply, compose,
                                          simplify, (\\))
-import qualified QuickSpec              as QS
 import           Test.QuickCheck        hiding (Result, shuffle)
 import           Test.QuickCheck.Gen    hiding (shuffle)
 import           Test.QuickCheck.Random
@@ -155,7 +155,7 @@ instance Arbitrary a => Arbitrary (PrimFun a) where
   arbitrary = oneof [fmap L arbitrary, fmap R arbitrary, return Invert]
 
 apply :: Group a => Fun a -> a -> a
-apply (ItFun xs) = foldr (((.)) . apply1) id xs
+apply (ItFun xs) = foldr ((.) . apply1) id xs
   where
     apply1 (L x) y  = x `op` y
     apply1 (R x) y  = y `op` x

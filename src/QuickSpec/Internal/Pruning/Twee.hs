@@ -13,12 +13,12 @@ import           Control.Monad.Trans.Class
 import           Data.Typeable
 import           QuickSpec.Internal.Pruning
 import qualified QuickSpec.Internal.Pruning.Background         as Background
-import           QuickSpec.Internal.Pruning.PartialApplication (PartiallyApplied)
 import qualified QuickSpec.Internal.Pruning.PartialApplication as PartialApplication
-import           QuickSpec.Internal.Pruning.Types              (Tagged)
+import           QuickSpec.Internal.Pruning.PartialApplication (PartiallyApplied)
 import qualified QuickSpec.Internal.Pruning.Types              as Types
-import           QuickSpec.Internal.Pruning.UntypedTwee        (Config (..))
+import           QuickSpec.Internal.Pruning.Types              (Tagged)
 import qualified QuickSpec.Internal.Pruning.UntypedTwee        as Untyped
+import           QuickSpec.Internal.Pruning.UntypedTwee        (Config (..))
 import           QuickSpec.Internal.Term
 import           QuickSpec.Internal.Terminal
 import           QuickSpec.Internal.Testing

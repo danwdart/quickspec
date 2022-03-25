@@ -17,8 +17,8 @@ import           QuickSpec.Internal.Term
 import           QuickSpec.Internal.Terminal
 import           QuickSpec.Internal.Testing
 import           QuickSpec.Internal.Type
-import           Twee.Base                             (Arity (..))
 import qualified Twee.Base                             as Twee
+import           Twee.Base                             (Arity (..))
 
 data Tagged fun =
     Func fun

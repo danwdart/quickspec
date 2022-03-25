@@ -8,11 +8,11 @@
 {-# LANGUAGE TypeOperators         #-}
 module Main where
 import           Data.Typeable
-import           GHC.Generics
 import           GenericStuff
+import           GHC.Generics
 import           Prelude                    hiding (sequence)
-import           QuickSpec                  hiding (Observe, observe)
 import qualified QuickSpec                  as QS
+import           QuickSpec                  hiding (Observe, observe)
 import           Test.QuickCheck
 import           Test.QuickCheck.Gen.Unsafe
 
