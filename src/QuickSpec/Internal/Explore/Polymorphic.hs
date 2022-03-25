@@ -1,44 +1,45 @@
 -- Theory exploration which handles polymorphism.
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE BangPatterns               #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE UndecidableInstances       #-}
 module QuickSpec.Internal.Explore.Polymorphic(
   module QuickSpec.Internal.Explore.Polymorphic,
   Result(..),
   Universe(..),
   VariableUse(..)) where
 
+import           Control.Monad
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.State.Strict
+import qualified Data.DList                         as DList
+import           Data.Lens.Light
+import           Data.Map                           (Map)
+import qualified Data.Map.Strict                    as Map
+import           Data.Maybe
+import           Data.Set                           (Set)
+import qualified Data.Set                           as Set
+import           QuickSpec.Internal.Explore.Schemas (Result (..), Schemas,
+                                                     VariableUse (..))
 import qualified QuickSpec.Internal.Explore.Schemas as Schemas
-import QuickSpec.Internal.Explore.Schemas(Schemas, Result(..), VariableUse(..))
-import QuickSpec.Internal.Term
-import QuickSpec.Internal.Type
-import QuickSpec.Internal.Testing
-import QuickSpec.Internal.Pruning
-import QuickSpec.Internal.Utils
-import QuickSpec.Internal.Prop
-import QuickSpec.Internal.Terminal
-import qualified Data.Map.Strict as Map
-import Data.Map(Map)
-import qualified Data.Set as Set
-import Data.Set(Set)
-import Data.Lens.Light
-import Control.Monad.Trans.State.Strict
-import Control.Monad.Trans.Class
-import qualified Twee.Base as Twee
-import Control.Monad
-import qualified Data.DList as DList
-import Data.Maybe
+import           QuickSpec.Internal.Prop
+import           QuickSpec.Internal.Pruning
+import           QuickSpec.Internal.Term
+import           QuickSpec.Internal.Terminal
+import           QuickSpec.Internal.Testing
+import           QuickSpec.Internal.Type
+import           QuickSpec.Internal.Utils
+import qualified Twee.Base                          as Twee
 
 data Polymorphic testcase result fun norm =
   Polymorphic {
-    pm_schemas :: Schemas testcase result (PolyFun fun) norm,
+    pm_schemas  :: Schemas testcase result (PolyFun fun) norm,
     pm_universe :: Universe }
 
 data PolyFun fun =
@@ -185,9 +186,8 @@ regeneralise =
 typeInstancesList :: [Type] -> [Type] -> [Twee.Var -> Type]
 typeInstancesList types prop =
   map eval
-    (foldr intersection [Map.empty]
-      (map constrain
-        (usort prop)))
+    (foldr (intersection . constrain) [Map.empty]
+        (usort prop))
   where
     constrain t =
       usort [ Map.fromList (Twee.substToList sub) | u <- types, Just sub <- [Twee.match t u] ]
@@ -223,7 +223,7 @@ universe xs = Universe (Set.fromList univ)
           | fun <- types,
             ho <- arrows fun,
             sub <- typeInstancesList univBase (components fun) ]
-  
+
     -- Finally, close the universe under the following operations:
     -- * Unifying two types
     -- * Unifying a function's argument with another type
@@ -242,7 +242,7 @@ universe xs = Universe (Set.fromList univ)
         mgus tys =
           tys ++
           [ ty
-          | ty1 <- tys, ty2 <- tys, 
+          | ty1 <- tys, ty2 <- tys,
             ty <- unPoly <$> combine (poly ty1) (poly ty2),
             or [isJust (matchType ty bound) | bound <- tys] ]
         combine ty1 ty2 =
@@ -253,7 +253,7 @@ universe xs = Universe (Set.fromList univ)
 
     components ty =
       case unpackArrow ty of
-        Nothing -> [ty]
+        Nothing         -> [ty]
         Just (ty1, ty2) -> components ty1 ++ components ty2
 
     arrows ty =
@@ -264,7 +264,7 @@ universe xs = Universe (Set.fromList univ)
             Just (arg, res) ->
               [ty] ++ arrows1 arg ++ arrows1 res
             _ -> []
- 
+
 inUniverse :: (PrettyTerm fun, Typed fun) => Term fun -> Universe -> Bool
 t `inUniverse` Universe{..} =
   and [oneTypeVar (typ u) `Set.member` univ_types | u <- subtermsFO t ++ map Var (vars t)]

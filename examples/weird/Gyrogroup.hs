@@ -1,8 +1,9 @@
-{-# LANGUAGE DeriveDataTypeable, GeneralizedNewtypeDeriving #-}
-import QuickSpec
-import Test.QuickCheck
-import System.Random
-import Data.Monoid
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+import           Data.Monoid
+import           QuickSpec
+import           System.Random
+import           Test.QuickCheck
 
 class Group a where
   ident :: a
@@ -160,7 +161,7 @@ sig2 =
 sig3 =
   sig0 {
     constants = [
-       (constant "gyr" (gyr :: It -> It -> It -> It)) ]}
+       constant "gyr" (gyr :: It -> It -> It -> It) ]}
 
 sig4 =
   sig0 {

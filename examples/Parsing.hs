@@ -1,12 +1,17 @@
 -- Parser combinators.
 -- Illustrates observational equality with polymorphic types.
-{-# LANGUAGE DeriveDataTypeable, TypeOperators, ScopedTypeVariables, StandaloneDeriving, TypeApplications, TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
-import Control.Monad
-import Test.QuickCheck
-import QuickSpec
-import Data.List
-import Text.ParserCombinators.ReadP
-import Data.Constraint
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE StandaloneDeriving    #-}
+{-# LANGUAGE TypeOperators         #-}
+import           Control.Monad
+import           Data.Constraint
+import           Data.List
+import           QuickSpec
+import           Test.QuickCheck
+import           Text.ParserCombinators.ReadP
 
 deriving instance Typeable ReadP
 

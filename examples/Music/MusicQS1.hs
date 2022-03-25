@@ -1,13 +1,14 @@
-{-# LANGUAGE TypeOperators, StandaloneDeriving, DeriveDataTypeable #-}
---module MusicQS where 
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE StandaloneDeriving #-}
+--module MusicQS where
 
-import Music hiding (main)
-import Perform
-import Test.QuickCheck
-import Data.Ratio
-import Control.Monad
-import Test.QuickSpec
-import Data.Typeable
+import           Control.Monad
+import           Data.Ratio
+import           Data.Typeable
+import           Music           hiding (main)
+import           Perform
+import           Test.QuickCheck
+import           Test.QuickSpec
 
 deriving instance Typeable Positive
 
@@ -21,12 +22,12 @@ instance Arbitrary PitchClass where
 
 instance Arbitrary Music where
          shrink = genericShrink
-         arbitrary = sized arb' 
+         arbitrary = sized arb'
            where
                 arb' 0 = oneof [liftM2 note arbitrary arbitrary,
-                               liftM rest arbitrary]
+                               fmap rest arbitrary]
                 arb' n = oneof [liftM2 note arbitrary arbitrary,
-                               liftM rest arbitrary,
+                               fmap rest arbitrary,
                                liftM2 (:+:) submusic2 submusic2,
                                liftM2 (:=:) submusic2 submusic2,
                                liftM2 tempo arbitrary submusic,
@@ -47,10 +48,10 @@ rest :: Positive Rational -> Music
 rest (Positive x) = Rest x
 
 tempo :: Positive Rational -> Music -> Music
-tempo (Positive x) m = Tempo x m
+tempo (Positive x) = Tempo x
 
 obsMusic :: Music -> Gen Performance
-obsMusic m = liftM2 perform arbitrary (return (m :+: c 1 tn)) 
+obsMusic m = liftM2 perform arbitrary (return (m :+: c 1 tn))
 
 prop_com :: Context -> Music -> Music -> Property
 prop_com c m1 m2 = perform c (m1 :=: m2) === perform c (m2 :=: m1)

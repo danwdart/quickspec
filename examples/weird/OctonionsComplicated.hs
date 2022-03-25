@@ -1,20 +1,26 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable, FlexibleInstances, TypeOperators, ScopedTypeVariables, FlexibleContexts #-}
-import Prelude hiding ((/))
-import qualified Prelude
-import Data.Ratio
-import Control.Monad
-import Control.Monad.IO.Class
-import Test.QuickCheck hiding (Result, shuffle)
-import Test.QuickCheck.Gen hiding (shuffle)
-import Test.QuickCheck.Random
-import Data.Ord
-import Data.Monoid
-import Data.List hiding ((\\))
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TypeOperators              #-}
+import           Control.Monad
+import           Control.Monad.IO.Class
+import           Data.List              hiding ((\\))
 import qualified Data.List
-import QuickSpec hiding (compose, (\\), Result, apply, simplify)
-import qualified QuickSpec as QS
-import Data.Maybe
-import qualified Data.Map as Map
+import qualified Data.Map               as Map
+import           Data.Maybe
+import           Data.Monoid
+import           Data.Ord
+import           Data.Ratio
+import           Prelude                hiding ((/))
+import qualified Prelude
+import           QuickSpec              hiding (Result, apply, compose,
+                                         simplify, (\\))
+import qualified QuickSpec              as QS
+import           Test.QuickCheck        hiding (Result, shuffle)
+import           Test.QuickCheck.Gen    hiding (shuffle)
+import           Test.QuickCheck.Random
 
 class Fractional a => Conj a where
   conj :: a -> a
@@ -65,7 +71,7 @@ newtype Perms = Perms { unPerms :: [Perm] } deriving (Eq, Ord, Show, CoArbitrary
 
 instance Arbitrary Perms where
   arbitrary =
-    fmap Perms $
+    Perms <$>
       mapM (fmap Perm . shuffle . unPerm) (unPerms ident)
 
 instance Group Perms where
@@ -86,23 +92,23 @@ invPerm (Perm xs) =
 shuffle :: forall a. (Ord a, CoArbitrary a) => [a] -> Gen [a]
 shuffle xs = do
   f <- resize 100 arbitrary :: Gen (a -> Large Int)
-  return (sortBy (comparing f) xs)
+  return (sortOn f xs)
 
 data Ext a = Norm a | Weird a deriving (Eq, Ord, Typeable, Show)
 
 instance Arbitrary a => Arbitrary (Ext a) where
   arbitrary = oneof [fmap Norm arbitrary, fmap Weird arbitrary]
 instance CoArbitrary a => CoArbitrary (Ext a) where
-  coarbitrary (Norm x) = variant (0 :: Int) . coarbitrary x
-  coarbitrary (Weird x)  = variant (1 :: Int) . coarbitrary x
+  coarbitrary (Norm x)  = variant (0 :: Int) . coarbitrary x
+  coarbitrary (Weird x) = variant (1 :: Int) . coarbitrary x
 instance Group a => Group (Ext a) where
   ident = Norm ident
-  inv (Norm x) = Norm (inv x)
-  inv (Weird x)  = Weird  x
-  op (Norm x) (Norm y) = Norm (op x y)
-  op (Weird x)  (Norm y) = Weird (op x (inv y))
-  op (Norm x) (Weird y)  = Weird (op y x)
-  op (Weird x)  (Weird y)  = Norm (op (inv y) x)
+  inv (Norm x)  = Norm (inv x)
+  inv (Weird x) = Weird  x
+  op (Norm x) (Norm y)    = Norm (op x y)
+  op (Weird x)  (Norm y)  = Weird (op x (inv y))
+  op (Norm x) (Weird y)   = Weird (op y x)
+  op (Weird x)  (Weird y) = Norm (op (inv y) x)
 
 data Three = T0 | T1 | T2 deriving (Eq, Ord, Typeable, Show, Enum)
 
@@ -149,10 +155,10 @@ instance Arbitrary a => Arbitrary (PrimFun a) where
   arbitrary = oneof [fmap L arbitrary, fmap R arbitrary, return Invert]
 
 apply :: Group a => Fun a -> a -> a
-apply (ItFun xs) = foldr (.) id (map apply1 xs)
+apply (ItFun xs) = foldr (((.)) . apply1) id xs
   where
-    apply1 (L x) y = x `op` y
-    apply1 (R x) y = y `op` x
+    apply1 (L x) y  = x `op` y
+    apply1 (R x) y  = y `op` x
     apply1 Invert x = inv x
 
 instance Group a => Group (Fun a) where
@@ -160,8 +166,8 @@ instance Group a => Group (Fun a) where
   op (ItFun xs) (ItFun ys) = ItFun (xs++ys)
   inv (ItFun xs) = ItFun (map inv1 (reverse xs))
     where
-      inv1 (L x) = L (inv x)
-      inv1 (R x) = R (inv x)
+      inv1 (L x)  = L (inv x)
+      inv1 (R x)  = R (inv x)
       inv1 Invert = Invert
 
 l x = ItFun [L x]
@@ -300,21 +306,21 @@ fromConstant sig c =
   head [ x | x <- [minBound..maxBound], toConstant x == c ]
 
 simplify :: Signature -> Prop -> Prop
-simplify sig ([] :=>: t :=: u) | typ t == typeOf (undefined :: ItFun) =
+simplify sig ([] :=>: t :=: u) | typ t == typeRep (Proxy :: Proxy ItFun) =
   [] :=>:
     toTerm (simplifyTerm (Fun Apply [Var v, fromTerm t])) :=:
     toTerm (simplifyTerm (Fun Apply [Var v, fromTerm u]))
   where
-    v = Variable (n+1) (typeOf (undefined :: It))
+    v = Variable (n+1) (typeRep (Proxy :: Proxy It))
     n = 1+maximum (0:map varNumber (vars t ++ vars u))
     toTerm (Fun f ts) = foldl QS.apply (Fun (toConstant f) []) (map toTerm ts)
-    toTerm (Var x) = Var x
+    toTerm (Var x)    = Var x
     fromTerm = mapTerm (fromConstant sig . (\c -> c { conArity = 0 })) id
 simplify sig ([] :=>: t :=: u) =
   [] :=>: toTerm (simplifyTerm (fromTerm t)) :=: toTerm (simplifyTerm (fromTerm u))
   where
     toTerm (Fun f ts) = foldl QS.apply (Fun (toConstant f) []) (map toTerm ts)
-    toTerm (Var x) = Var x
+    toTerm (Var x)    = Var x
     fromTerm = mapTerm (fromConstant sig . (\c -> c { conArity = 0 })) id
 simplify sig prop = prop
 
@@ -326,21 +332,21 @@ simplifyTerm (Fun Apply [x, Fun Compose [t, u]]) = simplifyTerm (Fun Apply [Fun 
 simplifyTerm (Fun f ts) = Fun f (map simplifyTerm ts)
 simplifyTerm x = x
 
-groundFuns t = null [ x | x <- vars t, typ x == typeOf (undefined :: ItFun) ]
+groundFuns t = null [ x | x <- vars t, typ x == typeRep (Proxy :: Proxy ItFun) ]
 
 toFun :: Tm Const Variable -> Fun (Tm Const Variable)
-toFun (Fun Id []) = ident
+toFun (Fun Id [])          = ident
 toFun (Fun Compose [f, g]) = toFun f `op` toFun g
-toFun (Fun Inversion [f]) = inv (toFun f)
-toFun (Fun L1 [x]) = l x
-toFun (Fun R1 [x]) = r x
-toFun (Fun L2 [x, y]) = l2 x y
-toFun (Fun R2 [x, y]) = r2 x y
-toFun (Fun C [x, y]) = c x y
-toFun (Fun T [x]) = t x
-toFun (Fun J []) = j
-toFun (Fun ConjJ [f]) = jconj (toFun f)
-toFun t = error $ show t
+toFun (Fun Inversion [f])  = inv (toFun f)
+toFun (Fun L1 [x])         = l x
+toFun (Fun R1 [x])         = r x
+toFun (Fun L2 [x, y])      = l2 x y
+toFun (Fun R2 [x, y])      = r2 x y
+toFun (Fun C [x, y])       = c x y
+toFun (Fun T [x])          = t x
+toFun (Fun J [])           = j
+toFun (Fun ConjJ [f])      = jconj (toFun f)
+toFun t                    = error $ show t
 
 instance Group (Tm Const Variable) where
   ident = Fun One []
@@ -379,7 +385,7 @@ simps = [highord, \sig prop -> Just (simplify sig prop)]
     highord _ prop
       | isHigher prop = Just prop
       | otherwise = Nothing
-    isHigher ([] :=>: t :=: u) = typ t == typeOf (undefined :: ItFun)
+    isHigher ([] :=>: t :=: u) = typ t == typeRep (Proxy :: Proxy ItFun)
 
 main = do
   let sig = renumber sig1
@@ -403,20 +409,18 @@ shrinkProof :: Signature -> [Simp] -> [Prop] -> [Prop] -> IO [Prop]
 shrinkProof sig simp bg props =
   upTo (\n props -> shrinkProof1 n (reverse props)) timeout props
   where
-    shrinkProof1 n [] = return []
+    shrinkProof1 n []           = return []
     shrinkProof1 n (goal:props) = shrinkProof' n sig simp bg [goal] props
 
 shrinkProof' :: Int -> Signature -> [Simp] -> [Prop] -> [Prop] -> [Prop] -> IO [Prop]
 shrinkProof' timeout sig simp bg goals [] = return goals
 shrinkProof' timeout sig simp bg goals (p:ps) = do
   res <- allProvable timeout sig simp (bg ++ ps) goals
-  case res of
-    True -> do
-      putStrLn ("Didn't need " ++ prettyShow p)
-      shrinkProof' timeout sig simp bg goals ps
-    False -> do
-      putStrLn ("Needed " ++ prettyShow p)
-      shrinkProof' timeout sig simp bg (p:goals) ps
+  if res then (do
+    putStrLn ("Didn't need " ++ prettyShow p)
+    shrinkProof' timeout sig simp bg goals ps) else (do
+    putStrLn ("Needed " ++ prettyShow p)
+    shrinkProof' timeout sig simp bg (p:goals) ps)
 
 establish :: Int -> Signature -> [Simp] -> [Prop] -> [Prop] -> IO [Prop]
 establish timeout sig simp bg ps = do
@@ -424,7 +428,7 @@ establish timeout sig simp bg ps = do
   let bg' = bg ++ new
   case new of
     [] -> do
-      putStrLn ("Proved following laws:")
+      putStrLn "Proved following laws:"
       mapM_ prettyPrint bg'
       return bg'
     _ -> do
@@ -437,17 +441,15 @@ establish1 :: Int -> Signature -> [Simp] -> [Prop] -> [Prop] -> [Prop] -> IO [Pr
 establish1 timeout sig simp bg new [] = return new
 establish1 timeout sig simp bg new (p:ps) = do
   res <- provable timeout sig simp (bg ++ new) p
-  case res of
-    True -> do
-      putStrLn ("Proved " ++ prettyShow p)
-      establish1 timeout sig simp bg (new ++ [p]) ps
-    False -> do
-      putStrLn ("Failed to prove " ++ prettyShow (sep [pretty p <+> text "=>", nest 2 (pretty [ f sig p | f <- simp ])]))
-      establish1 timeout sig simp bg new ps
+  if res then (do
+    putStrLn ("Proved " ++ prettyShow p)
+    establish1 timeout sig simp bg (new ++ [p]) ps) else (do
+    putStrLn ("Failed to prove " ++ prettyShow (sep [pretty p <+> text "=>", nest 2 (pretty [ f sig p | f <- simp ])]))
+    establish1 timeout sig simp bg new ps)
 
 provable1 :: Int -> Signature -> Simp -> [Prop] -> Prop -> IO Bool
 provable1 timeout sig simp bg p = do
-  let bg' = catMaybes (map (fmap strip . simp sig) bg)
+  let bg' = mapMaybe (fmap strip . simp sig) bg
       strip = fmap (mapTerm stripCon stripVar)
       stripCon c = TermConstant c (typ c)
       stripVar x = PruningVariable (number x)
@@ -461,17 +463,13 @@ provable :: Int -> Signature -> [Simp] -> [Prop] -> Prop -> IO Bool
 provable timeout sig [] bg p = return False
 provable timeout sig (simp:simps) bg p = do
   rest <- provable1 timeout sig simp bg p
-  case rest of
-    True -> return True
-    False -> provable timeout sig simps bg p
+  if rest then return True else provable timeout sig simps bg p
 
 allProvable :: Int -> Signature -> [Simp] -> [Prop] -> [Prop] -> IO Bool
 allProvable _ _ _ _ [] = return True
 allProvable timeout sig simp ps (q:qs) = do
   res <- provable timeout sig simp ps q
-  case res of
-    False -> return False
-    True -> allProvable timeout sig simp (ps ++ [q]) qs
+  if res then allProvable timeout sig simp (ps ++ [q]) qs else return False
 
 newtype Cayley = Cayley Int deriving (Eq, Ord, Show, CoArbitrary)
 

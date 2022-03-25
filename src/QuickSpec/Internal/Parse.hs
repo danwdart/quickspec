@@ -1,16 +1,18 @@
 -- | Parsing strings into properties.
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses, GADTs #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module QuickSpec.Internal.Parse where
 
-import Control.Monad
-import Data.Char
-import QuickSpec.Internal.Prop
-import QuickSpec.Internal.Term hiding (char)
-import QuickSpec.Internal.Type
-import qualified Data.Label as Label
-import Text.ParserCombinators.ReadP
+import           Control.Monad
+import           Data.Char
+import qualified Data.Label                   as Label
+import           QuickSpec.Internal.Prop
+import           QuickSpec.Internal.Term      hiding (char)
+import           QuickSpec.Internal.Type
+import           Text.ParserCombinators.ReadP
 
 class Parse fun a where
   parse :: ReadP fun -> ReadP a

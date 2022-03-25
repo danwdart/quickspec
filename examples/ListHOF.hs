@@ -1,4 +1,4 @@
-import QuickSpec
+import           QuickSpec
 
 sig =
   [ con "map"  (map   :: (A -> B) -> [A] -> [B])

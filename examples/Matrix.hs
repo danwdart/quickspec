@@ -1,18 +1,18 @@
 -- A simple example testing arithmetic functions.
-{-# LANGUAGE TupleSections, TypeSynonymInstances, FlexibleInstances #-}
-import QuickSpec hiding (A)
-import QuickSpec.Internal hiding (A)
+{-# LANGUAGE FlexibleInstances #-}
+import           Control.Monad
+import           Data.Complex
+import           Data.Either
+import           Data.Matrix
+import           Data.Ord
+import           Data.Vector                (Vector)
+import           Numeric.Natural
+import           QuickSpec                  hiding (A)
+import           QuickSpec.Internal         hiding (A)
 import qualified QuickSpec.Internal.Haskell as Haskell
-import Test.QuickCheck
-import Twee.Pretty
-import Control.Monad
-import Data.Matrix
-import Data.Ord
-import Data.Either
-import Data.Vector(Vector)
-import Data.Complex
-import Numeric.Natural
-import Test.QuickCheck.Instances
+import           Test.QuickCheck
+import           Test.QuickCheck.Instances
+import           Twee.Pretty
 
 dim = 5
 
@@ -92,11 +92,11 @@ makeLowerTriangular = mapPos (\(i, j) x -> if i > j then 0 else x)
 isLowerTriangular :: T -> Bool
 isLowerTriangular m = makeLowerTriangular m == m
 
-genLowerTriangular :: Gen (T)
+genLowerTriangular :: Gen T
 genLowerTriangular = makeLowerTriangular <$> arbitrary
 
 makeHermitian :: T -> T
-makeHermitian m = m + {-fmap conjugate-} (transpose m)
+makeHermitian m = m + {-fmap conjugate-} transpose m
 
 isHermitian :: T -> Bool
 isHermitian m = m == {-fmap conjugate-} (transpose m)

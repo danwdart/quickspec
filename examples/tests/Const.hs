@@ -1,4 +1,4 @@
-import QuickSpec
+import           QuickSpec
 
 main = quickSpec [
   con "const" (const :: A -> B -> A),

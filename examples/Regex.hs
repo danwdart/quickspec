@@ -1,17 +1,19 @@
 -- Regular expressions.
-{-# LANGUAGE GeneralizedNewtypeDeriving,DeriveDataTypeable, FlexibleInstances #-}
-import qualified Control.Monad.State as S
-import Control.Monad.State hiding (State, state)
-import qualified Data.Map as M
-import Data.List
-import Data.Map(Map)
-import Data.Typeable
-import QuickSpec
-import Test.QuickCheck
-import Test.QuickCheck.Random
-import Test.QuickCheck.Gen
-import Data.Ord
-import Data.Monoid
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+import           Control.Monad.State    hiding (State, state)
+import qualified Control.Monad.State    as S
+import           Data.List
+import           Data.Map               (Map)
+import qualified Data.Map               as M
+import           Data.Monoid
+import           Data.Ord
+import           Data.Typeable
+import           QuickSpec
+import           Test.QuickCheck
+import           Test.QuickCheck.Gen
+import           Test.QuickCheck.Random
 
 data Sym = A | B deriving (Eq, Ord, Typeable)
 
@@ -21,10 +23,10 @@ instance Arbitrary Sym where
 newtype State = State Int deriving (Eq, Ord, Num, Show)
 
 data NFA a = NFA {
-    epsilons :: Map State [State],
+    epsilons    :: Map State [State],
     transitions :: Map (State, Maybe a) [State],
-    initial :: State,
-    final :: State } deriving Show
+    initial     :: State,
+    final       :: State } deriving Show
 
 data Regex a = Char a | AnyChar | Epsilon | Zero
              | Concat (Regex a) (Regex a)
@@ -89,7 +91,7 @@ compile r = NFA (close (foldr enter M.empty epsilons)) (foldr flatten M.empty ed
         enter (from, to) epsilons = M.insertWith (++) from [to] epsilons
 
 close :: Ord a => Map a [a] -> Map a [a]
-close m | xs == [] = m
+close m | null xs = m
         | otherwise = close (foldr enter m xs)
         where enter (from, to) epsilons = M.insertWith (++) from [to] epsilons
               xs = nub' (close1 m)

@@ -1,16 +1,20 @@
-{-# LANGUAGE TypeOperators, StandaloneDeriving, DeriveDataTypeable, MultiParamTypeClasses, FlexibleInstances, GeneralizedNewtypeDeriving #-}
---module MusicQS where 
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+--module MusicQS where
 
-import Music hiding (main)
-import Perform
-import Test.QuickCheck
-import Data.Ratio
-import Control.Monad
-import QuickSpec
-import QuickSpec.Internal.Utils
-import Data.Monoid
-import Data.List
-import qualified Data.Set as Set
+import           Control.Monad
+import           Data.List
+import           Data.Monoid
+import           Data.Ratio
+import qualified Data.Set                 as Set
+import           Music                    hiding (main)
+import           Perform
+import           QuickSpec
+import           QuickSpec.Internal.Utils
+import           Test.QuickCheck
 
 deriving instance Typeable Positive
 
@@ -32,12 +36,12 @@ genRatio = do
 
 instance Arbitrary Music where
          shrink = genericShrink
-         arbitrary = sized arb' 
+         arbitrary = sized arb'
            where
                 arb' 0 = oneof [liftM2 Note arbitrary genRatio,
-                               liftM Rest genRatio]
+                               fmap Rest genRatio]
                 arb' n = oneof [liftM2 Note arbitrary genRatio,
-                               liftM Rest genRatio,
+                               fmap Rest genRatio,
                                liftM2 (:+:) submusic2 submusic2,
                                liftM2 (:=:) submusic2 submusic2,
                                liftM2 Tempo (genRatio `suchThat` (> 0)) submusic,
@@ -67,7 +71,7 @@ rest :: NonNeg -> Music
 rest (NonNeg x) = Rest x
 
 tempo :: Pos -> Music -> Music
-tempo (Pos x) m = Tempo x m
+tempo (Pos x) = Tempo x
 
 main = quickSpec [
   monoType (Proxy :: Proxy NonNeg),

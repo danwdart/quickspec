@@ -1,28 +1,32 @@
 -- Testing conjectures using QuickCheck.
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, RecordWildCards, MultiParamTypeClasses, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE RecordWildCards            #-}
 module QuickSpec.Internal.Testing.QuickCheck where
 
-import QuickSpec.Internal.Testing
-import QuickSpec.Internal.Pruning
-import QuickSpec.Internal.Prop
-import Test.QuickCheck
-import Test.QuickCheck.Gen
-import Test.QuickCheck.Random
-import Control.Monad
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Reader
-import Data.List
-import System.Random hiding (uniform)
-import QuickSpec.Internal.Terminal
-import Data.Lens.Light
+import           Control.Monad
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Reader
+import           Data.Lens.Light
+import           Data.List
+import           QuickSpec.Internal.Prop
+import           QuickSpec.Internal.Pruning
+import           QuickSpec.Internal.Terminal
+import           QuickSpec.Internal.Testing
+import           System.Random               hiding (uniform)
+import           Test.QuickCheck
+import           Test.QuickCheck.Gen
+import           Test.QuickCheck.Random
 
 data Config =
   Config {
-    cfg_num_tests :: Int,
+    cfg_num_tests     :: Int,
     cfg_max_test_size :: Int,
-    cfg_fixed_seed :: Maybe QCGen}
+    cfg_fixed_seed    :: Maybe QCGen}
   deriving Show
 
 lens_num_tests = lens cfg_num_tests (\x y -> y { cfg_num_tests = x })
@@ -32,8 +36,8 @@ lens_fixed_seed = lens cfg_fixed_seed (\x y -> y { cfg_fixed_seed = x })
 data Environment testcase term result =
   Environment {
     env_config :: Config,
-    env_tests :: [testcase],
-    env_eval :: testcase -> term -> result }
+    env_tests  :: [testcase],
+    env_eval   :: testcase -> term -> result }
 
 newtype Tester testcase term result m a =
   Tester (ReaderT (Environment testcase term result) m a)
@@ -55,9 +59,8 @@ run config@Config{..} gen eval (Tester x) = do
     -- Bias tests towards smaller sizes.
     -- We do this by distributing the cube of the size uniformly.
     sizes =
-      reverse $ map (k -) $
-      map (truncate . (** (1/fromInteger bias)) . fromIntegral) $
-      uniform (toInteger n) (toInteger k^bias)
+      reverse $ map ((k -) . (truncate . (** (1/fromInteger bias)) . fromIntegral)) (
+      uniform (toInteger n) (toInteger k^bias))
     tests = zipWith (unGen gen) seeds sizes
   return $ runReaderT x
     Environment {

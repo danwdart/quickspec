@@ -1,65 +1,67 @@
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE PatternGuards #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE GADTs                  #-}
+{-# LANGUAGE PatternGuards          #-}
+{-# LANGUAGE RankNTypes             #-}
+{-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE TypeOperators          #-}
+
+{-# LANGUAGE ConstraintKinds        #-}
+{-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE RecordWildCards        #-}
+{-# LANGUAGE UndecidableInstances   #-}
 module QuickSpec.Internal.Haskell where
 
-import QuickSpec.Internal.Haskell.Resolve
-import QuickSpec.Internal.Type
-import QuickSpec.Internal.Prop
-import QuickSpec.Internal.Pruning
-import Test.QuickCheck hiding (total, classify, subterms, Fun)
-import Data.Constraint hiding ((\\))
-import Data.Proxy
-import qualified Twee.Base as Twee
-import QuickSpec.Internal.Term
-import Data.Functor.Identity
-import Data.Maybe
-import Data.MemoUgly
-import Test.QuickCheck.Gen.Unsafe
-import Data.Char
-import Data.Ord
-import qualified QuickSpec.Internal.Testing.QuickCheck as QuickCheck
-import qualified QuickSpec.Internal.Pruning.Twee as Twee
-import QuickSpec.Internal.Explore hiding (quickSpec)
+import           Control.Monad
+import           Control.Monad.Trans.State.Strict
+import           Control.Spoon
+import           Data.Char
+import           Data.Complex
+import           Data.Constraint                         hiding ((\\))
+import           Data.Functor.Compose
+import           Data.Functor.Identity
+import           Data.Int
+import           Data.Lens.Light
+import           Data.List.NonEmpty                      (NonEmpty)
+import           Data.Maybe
+import           Data.MemoUgly
+import qualified Data.Monoid                             as DM
+import           Data.Ord
+import           Data.Proxy
+import           Data.Ratio
+import qualified Data.Semigroup                          as DS
+import qualified Data.Set                                as Set
+import           Data.Unique
+import           Data.Void
+import           Data.Word
+import           GHC.TypeLits
+import           Numeric.Natural
+import           QuickSpec.Internal.Explore              hiding (quickSpec)
 import qualified QuickSpec.Internal.Explore
-import QuickSpec.Internal.Explore.Polymorphic(Universe(..), VariableUse(..))
-import QuickSpec.Internal.Pruning.Background(Background)
-import Control.Monad
-import Control.Monad.Trans.State.Strict
-import QuickSpec.Internal.Terminal
-import Text.Printf
-import QuickSpec.Internal.Utils
-import Data.Lens.Light
-import GHC.TypeLits
-import QuickSpec.Internal.Explore.Conditionals hiding (Normal)
-import Control.Spoon
-import qualified Data.Set as Set
-import qualified Test.QuickCheck.Poly as Poly
-import Numeric.Natural
-import Test.QuickCheck.Instances()
-import Data.Word
-import Data.List.NonEmpty (NonEmpty)
-import Data.Complex
-import Data.Ratio
-import Data.Functor.Compose
-import Data.Int
-import Data.Void
-import Data.Unique
-import qualified Data.Monoid as DM
-import qualified Data.Semigroup as DS
+import           QuickSpec.Internal.Explore.Conditionals hiding (Normal)
+import           QuickSpec.Internal.Explore.Polymorphic  (Universe (..),
+                                                          VariableUse (..))
+import           QuickSpec.Internal.Haskell.Resolve
+import           QuickSpec.Internal.Prop
+import           QuickSpec.Internal.Pruning
+import           QuickSpec.Internal.Pruning.Background   (Background)
+import qualified QuickSpec.Internal.Pruning.Twee         as Twee
+import           QuickSpec.Internal.Term
+import           QuickSpec.Internal.Terminal
+import qualified QuickSpec.Internal.Testing.QuickCheck   as QuickCheck
+import           QuickSpec.Internal.Type
+import           QuickSpec.Internal.Utils
+import           Test.QuickCheck                         hiding (Fun, classify,
+                                                          subterms, total)
+import           Test.QuickCheck.Gen.Unsafe
+import           Test.QuickCheck.Instances               ()
+import qualified Test.QuickCheck.Poly                    as Poly
+import           Text.Printf
+import qualified Twee.Base                               as Twee
 
 baseInstances :: Instances
 baseInstances =
@@ -222,7 +224,7 @@ instance Observe t p a => Observe t (NonEmpty p) (NonEmpty a) where
 instance Observe t p a => Observe (t, t) (p, p) (Complex a) where
   observe (t1, t2) (p1 :+ p2) = (observe t1 p1, observe t2 p2)
 instance Observe t p a => Observe (t, t) (p, p) (Ratio a) where
-  observe (t1, t2) (p)
+  observe (t1, t2) p
     = (observe t1 $ numerator p, observe t2 $ denominator p)
 instance Observe t p a => Observe t p (Identity a) where
   observe t = observe t . runIdentity
@@ -317,7 +319,7 @@ instance Ord (Value Ordy) where
 data TestCase =
   TestCase {
     -- | Evaluate a variable. Returns @Nothing@ if no `Arbitrary` instance was found.
-    tc_eval_var :: Var -> Maybe (Value Identity),
+    tc_eval_var    :: Var -> Maybe (Value Identity),
     -- | Apply an observation function to get a value implementing `Ord`.
     -- Returns @Nothing@ if no observer was found.
     tc_test_result :: Value Identity -> Maybe (Value Ordy) }
@@ -345,7 +347,7 @@ findGenerator def insts ty =
   bringFunctor <$> (findInstance insts (defaultTo def ty) :: Maybe (Value Gen))
 
 findOrdInstance :: Instances -> Type -> Maybe (Value OrdInstance)
-findOrdInstance insts ty = findInstance insts ty
+findOrdInstance = findInstance
 
 findObserver :: Instances -> Type -> Maybe (Gen (Value Identity -> Value Ordy))
 findObserver insts ty = do
@@ -379,13 +381,13 @@ evalHaskell def insts (TestCase env obs) t =
 
 data Constant =
   Constant {
-    con_name  :: String,
-    con_style :: TermStyle,
-    con_value :: Value Identity,
-    con_type :: Type,
+    con_name        :: String,
+    con_style       :: TermStyle,
+    con_value       :: Value Identity,
+    con_type        :: Type,
     con_constraints :: [Type],
-    con_size :: Int,
-    con_classify :: Classification Constant }
+    con_size        :: Int,
+    con_classify    :: Classification Constant }
 
 instance Eq Constant where
   x == y =
@@ -435,7 +437,7 @@ selectors :: Constant -> [Constant]
 selectors con =
   case con_classify con of
     Predicate{..} -> clas_selectors
-    _ -> []
+    _             -> []
 
 -- Move the constraints of a constant back into the main type
 unhideConstraint :: Constant -> Constant
@@ -582,7 +584,7 @@ predicateGen :: forall a. ( Predicateable a
              , Typeable a
              , Typeable (PredicateTestCase a)
              , HasFriendly (PredicateTestCase a))
-             => String -> a -> (Gen (FriendlyPredicateTestCase a)) -> (Instances, Constant)
+             => String -> a -> Gen (FriendlyPredicateTestCase a) -> (Instances, Constant)
 predicateGen name pred gen =
   unfriendlyPredicateGen name pred (\() -> unfriendly <$> gen)
 
@@ -606,21 +608,21 @@ data PrintStyle
 
 data Config =
   Config {
-    cfg_quickCheck :: QuickCheck.Config,
-    cfg_twee :: Twee.Config,
-    cfg_max_size :: Int,
+    cfg_quickCheck           :: QuickCheck.Config,
+    cfg_twee                 :: Twee.Config,
+    cfg_max_size             :: Int,
     cfg_max_commutative_size :: Int,
-    cfg_max_functions :: Int,
-    cfg_instances :: Instances,
+    cfg_max_functions        :: Int,
+    cfg_instances            :: Instances,
     -- This represents the constants for a series of runs of QuickSpec.
     -- Each index in cfg_constants represents one run of QuickSpec.
     -- head cfg_constants contains all the background functions.
-    cfg_constants :: [[Constant]],
-    cfg_default_to :: Type,
+    cfg_constants            :: [[Constant]],
+    cfg_default_to           :: Type,
     cfg_infer_instance_types :: Bool,
-    cfg_background :: [Prop (Term Constant)],
-    cfg_print_filter :: Prop (Term Constant) -> Bool,
-    cfg_print_style :: PrintStyle
+    cfg_background           :: [Prop (Term Constant)],
+    cfg_print_filter         :: Prop (Term Constant) -> Bool,
+    cfg_print_style          :: PrintStyle
     }
 
 lens_quickCheck = lens cfg_quickCheck (\x y -> y { cfg_quickCheck = x })
@@ -649,7 +651,7 @@ defaultConfig =
     cfg_default_to = typeRep (Proxy :: Proxy Int),
     cfg_infer_instance_types = False,
     cfg_background = [],
-    cfg_print_filter = \_ -> True,
+    cfg_print_filter = const True,
     cfg_print_style = ForHumans }
 
 -- Extra types for the universe that come from in-scope instances.
@@ -680,7 +682,7 @@ instanceTypes insts Config{..}
 data Warnings =
   Warnings {
     warn_no_generator :: [Type],
-    warn_no_observer :: [Type] }
+    warn_no_observer  :: [Type] }
 
 warnings :: Universe -> Instances -> Config -> Warnings
 warnings univ insts Config{..} =
@@ -764,7 +766,7 @@ quickSpec cfg@Config{..} = do
       p `elem` concat (take 1 cfg_constants) &&
       case classify p of
         Predicate{} -> True
-        _ -> False
+        _           -> False
 
     isBackgroundProp p =
       not (null fs) && and [f `elem` concat (take 1 cfg_constants) | f <- fs]
@@ -789,7 +791,7 @@ quickSpec cfg@Config{..} = do
     conditions t = usort [p | f <- funs t, Selector _ p _ <- [classify f]]
 
     use ty =
-      ofValue (\(Use x) -> x) $ fromJust $
+      ofValue (\(Use x) -> x) $ fromJust
       (findInstance instances ty :: Maybe (Value Use))
 
     mainOf n f g = do
@@ -805,7 +807,7 @@ quickSpec cfg@Config{..} = do
           putLine "quickspec_laws ="
       let
         pres prop = do
-          modify $ \(k, props) -> (k, prop:props)
+          modify $ Data.Bifunctor.second ((:) prop)
           if n == 0 then return () else present (constantsOf f) prop
       QuickSpec.Internal.Explore.quickSpec pres (flip eval) cfg_max_size cfg_max_commutative_size use univ
         (enumerator (map Fun (constantsOf g)))
@@ -821,10 +823,9 @@ quickSpec cfg@Config{..} = do
         round n = mainOf n (concat . take 1 . drop n) (concat . take (n+1))
         rounds = length cfg_constants
 
-  join $
-    fmap withStdioTerminal $
+  withStdioTerminal =<< (
     generate $
     QuickCheck.run cfg_quickCheck (arbitraryTestCase cfg_default_to instances) eval $
     Twee.run cfg_twee { Twee.cfg_max_term_size = Twee.cfg_max_term_size cfg_twee `max` cfg_max_size } $
     runConditionals constants $
-    fmap (reverse . snd) $ flip execStateT (1, []) main
+    fmap (reverse . snd) $ flip execStateT (1, []) main)

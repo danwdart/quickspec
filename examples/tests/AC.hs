@@ -1,6 +1,6 @@
 -- a function which satisfies x+(y+z)=y+(x+z) but is not AC
-import QuickSpec
-import Test.QuickCheck
+import           QuickSpec
+import           Test.QuickCheck
 
 data X = A | B | C deriving (Eq, Ord, Enum, Bounded)
 instance Arbitrary X where arbitrary = elements [minBound..maxBound]

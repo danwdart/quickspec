@@ -1,19 +1,24 @@
 -- A pruning layer which automatically adds axioms about functions as they appear.
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, FlexibleContexts, GeneralizedNewtypeDeriving, UndecidableInstances, TypeOperators #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE UndecidableInstances       #-}
 module QuickSpec.Internal.Pruning.Background where
 
-import QuickSpec.Internal.Term
-import QuickSpec.Internal.Testing
-import QuickSpec.Internal.Pruning
-import QuickSpec.Internal.Prop
-import QuickSpec.Internal.Terminal
-import qualified Data.Set as Set
-import Data.Set(Set)
-import Control.Monad
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.State.Strict hiding (State)
+import           Control.Monad
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.State.Strict hiding (State)
+import           Data.Set                         (Set)
+import qualified Data.Set                         as Set
+import           QuickSpec.Internal.Prop
+import           QuickSpec.Internal.Pruning
+import           QuickSpec.Internal.Term
+import           QuickSpec.Internal.Terminal
+import           QuickSpec.Internal.Testing
 
 newtype Pruner fun m a =
   Pruner (StateT (Set fun) m a)

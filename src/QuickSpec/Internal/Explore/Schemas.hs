@@ -1,28 +1,31 @@
 -- Theory exploration which works on a schema at a time.
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE RecordWildCards, FlexibleContexts, PatternGuards, TupleSections, MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RecordWildCards       #-}
 module QuickSpec.Internal.Explore.Schemas where
 
-import qualified Data.Map.Strict as Map
-import Data.Map(Map)
-import QuickSpec.Internal.Prop
-import QuickSpec.Internal.Pruning
-import QuickSpec.Internal.Term
-import QuickSpec.Internal.Type
-import QuickSpec.Internal.Testing
-import QuickSpec.Internal.Utils
-import QuickSpec.Internal.Terminal
+import           Control.Monad
+import           Control.Monad.Trans.State.Strict hiding (State)
+import           Data.Label
+import           Data.Lens.Light
+import           Data.List
+import           Data.Map                         (Map)
+import qualified Data.Map.Strict                  as Map
+import           Data.Maybe
+import           Data.Ord
+import           Data.Set                         (Set)
+import qualified Data.Set                         as Set
+import           QuickSpec.Internal.Explore.Terms (Terms)
 import qualified QuickSpec.Internal.Explore.Terms as Terms
-import QuickSpec.Internal.Explore.Terms(Terms)
-import Control.Monad.Trans.State.Strict hiding (State)
-import Data.List
-import Data.Ord
-import Data.Lens.Light
-import qualified Data.Set as Set
-import Data.Set(Set)
-import Data.Maybe
-import Control.Monad
-import Data.Label
+import           QuickSpec.Internal.Prop
+import           QuickSpec.Internal.Pruning
+import           QuickSpec.Internal.Term
+import           QuickSpec.Internal.Terminal
+import           QuickSpec.Internal.Testing
+import           QuickSpec.Internal.Type
+import           QuickSpec.Internal.Utils
 
 -- | Constrains how variables of a particular type may occur in a term.
 data VariableUse =
@@ -136,8 +139,8 @@ instantiate ::
 instantiate rep t = do
   use <- access use
   zoom (instance_ rep) $ do
-    let instances = sortBy (comparing generality) (allUnifications use (mostGeneral use t))
-    Accepted <$> catMaybes <$> forM instances (\t -> do
+    let instances = sortOn generality (allUnifications use (mostGeneral use t))
+    Accepted . catMaybes <$> forM instances (\t -> do
       res <- Terms.explore t
       case res of
         Terms.Discovered prop -> do
@@ -181,8 +184,8 @@ allUnifications use t =
   [ subst (\x -> Var (Map.findWithDefault undefined x s)) t | s <- ss ]
   where
     ss =
-      map Map.fromList $ map concat $ sequence
-        [substsFor xs (typ y) | xs@(y:_) <- partitionBy typ (usort (vars t))]
+      map (Map.fromList . concat) (sequence
+        [substsFor xs (typ y) | xs@(y:_) <- partitionBy typ (usort (vars t))])
 
     substsFor xs ty =
       case use ty of

@@ -3,16 +3,19 @@
 -- Illustrates:
 --   * Observational equality
 --   * Running QuickSpec on a progressively larger set of signatures
-{-# LANGUAGE DeriveDataTypeable, TypeOperators, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses #-}
-import QuickSpec
-import Test.QuickCheck
-import qualified Data.Set as Set
-import Data.Set(Set)
-import Prelude hiding (flip, cycle)
-import Data.Monoid
-import Control.Monad
-import Data.Word
-import Data.Constraint
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeOperators         #-}
+import           Control.Monad
+import           Data.Constraint
+import           Data.Monoid
+import           Data.Set        (Set)
+import qualified Data.Set        as Set
+import           Data.Word
+import           Prelude         hiding (cycle, flip)
+import           QuickSpec
+import           Test.QuickCheck
 
 -- We use our own number type for efficiency purposes.
 -- This can represent numbers of the form x/2^e where x and e are integers.

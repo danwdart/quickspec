@@ -1,34 +1,40 @@
 -- | The main QuickSpec module, with internal stuff exported.
 -- For QuickSpec hackers only.
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeOperators         #-}
+
+{-# LANGUAGE AllowAmbiguousTypes   #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE TypeApplications      #-}
 module QuickSpec.Internal where
 
-import QuickSpec.Internal.Haskell(Predicateable, PredicateTestCase, Names(..), Observe(..), Use(..), HasFriendly, FriendlyPredicateTestCase)
-import qualified QuickSpec.Internal.Haskell as Haskell
-import qualified QuickSpec.Internal.Haskell.Resolve as Haskell
-import qualified QuickSpec.Internal.Testing.QuickCheck as QuickCheck
+import           Data.Constraint
+import           Data.Lens.Light
+import           Data.Proxy
+import           Data.Semigroup                         (Semigroup (..))
+import           QuickSpec.Internal.Explore.Schemas     (VariableUse (..))
+import           QuickSpec.Internal.Haskell             (FriendlyPredicateTestCase,
+                                                         HasFriendly,
+                                                         Names (..),
+                                                         Observe (..),
+                                                         PredicateTestCase,
+                                                         Predicateable,
+                                                         Use (..))
+import qualified QuickSpec.Internal.Haskell             as Haskell
+import qualified QuickSpec.Internal.Haskell.Resolve     as Haskell
+import           QuickSpec.Internal.Prop
 import qualified QuickSpec.Internal.Pruning.UntypedTwee as Twee
-import QuickSpec.Internal.Prop
-import QuickSpec.Internal.Term(Term)
-import QuickSpec.Internal.Explore.Schemas(VariableUse(..))
-import Test.QuickCheck
-import Test.QuickCheck.Random
-import Data.Constraint
-import Data.Lens.Light
-import QuickSpec.Internal.Utils
-import QuickSpec.Internal.Type hiding (defaultTo)
-import Data.Proxy
-import System.Environment
-import Data.Semigroup(Semigroup(..))
+import           QuickSpec.Internal.Term                (Term)
+import qualified QuickSpec.Internal.Testing.QuickCheck  as QuickCheck
+import           QuickSpec.Internal.Type                hiding (defaultTo)
+import           QuickSpec.Internal.Utils
+import           System.Environment
+import           Test.QuickCheck
+import           Test.QuickCheck.Random
 
 -- | Run QuickSpec. See the documentation at the top of this file.
 quickSpec :: Signature sig => sig -> IO ()
@@ -64,7 +70,7 @@ data Context = Context Int [String]
 instance Semigroup Sig where
   Sig sig1 <> Sig sig2 = Sig (\ctx -> sig2 ctx . sig1 ctx)
 instance Monoid Sig where
-  mempty = Sig (\_ -> id)
+  mempty = Sig (const id)
   mappend = (<>)
 
 -- | A class of things that can be used as a QuickSpec signature.
@@ -170,7 +176,7 @@ predicateGen name x gen =
 
 -- | Declare a new monomorphic type.
 -- The type must implement `Ord` and `Arbitrary`.
--- 
+--
 -- If the type does not implement `Ord`, you can use `monoTypeObserve`
 -- to declare an observational equivalence function. If the type does
 -- not implement `Arbitrary`, you can use `generator` to declare a
@@ -344,7 +350,7 @@ without sig xs =
 -- >       con "++" ((++) :: [A] -> [A] -> [A]),
 -- >       con "length" (length :: [A] -> Int) ]
 series :: Signature sig => [sig] -> Sig
-series = foldr op mempty . map signature
+series = foldr (op . signature) mempty
   where
     op sig sigs = sig `mappend` later (signature sigs)
     later sig =
@@ -408,7 +414,7 @@ withFixedSeed s = Sig (\_ -> setL (QuickCheck.lens_fixed_seed # Haskell.lens_qui
 -- | Automatically infer types to add to the universe from
 -- available type class instances
 withInferInstanceTypes :: Sig
-withInferInstanceTypes = Sig (\_ -> setL (Haskell.lens_infer_instance_types) True)
+withInferInstanceTypes = Sig (\_ -> setL Haskell.lens_infer_instance_types True)
 
 -- | A signature containing boolean functions:
 -- @(`||`)@, @(`&&`)@, `not`, `True`, `False`.

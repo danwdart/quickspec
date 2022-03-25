@@ -1,21 +1,22 @@
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE FlexibleContexts, PatternGuards #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE PatternGuards    #-}
 module QuickSpec.Internal.Explore where
 
-import QuickSpec.Internal.Explore.Polymorphic
-import QuickSpec.Internal.Testing
-import QuickSpec.Internal.Pruning
-import QuickSpec.Internal.Term
-import QuickSpec.Internal.Type
-import QuickSpec.Internal.Utils
-import QuickSpec.Internal.Prop
-import QuickSpec.Internal.Terminal
-import Control.Monad
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.State.Strict
-import Text.Printf
-import Data.Semigroup(Semigroup(..))
-import Data.List
+import           Control.Monad
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.State.Strict
+import           Data.List
+import           Data.Semigroup                         (Semigroup (..))
+import           QuickSpec.Internal.Explore.Polymorphic
+import           QuickSpec.Internal.Prop
+import           QuickSpec.Internal.Pruning
+import           QuickSpec.Internal.Term
+import           QuickSpec.Internal.Terminal
+import           QuickSpec.Internal.Testing
+import           QuickSpec.Internal.Type
+import           QuickSpec.Internal.Utils
+import           Text.Printf
 
 newtype Enumerator a = Enumerator { enumerate :: Int -> [[a]] -> [a] }
 
@@ -36,8 +37,7 @@ mapEnumerator f e =
     f (enumerate e n tss)
 
 filterEnumerator :: (a -> Bool) -> Enumerator a -> Enumerator a
-filterEnumerator p e =
-  mapEnumerator (filter p) e
+filterEnumerator p = mapEnumerator (filter p)
 
 enumerateConstants :: Sized a => [a] -> Enumerator a
 enumerateConstants ts = Enumerator (\n _ -> [t | t <- ts, size t == n])
@@ -51,12 +51,10 @@ enumerateApplications = Enumerator $ \n tss ->
       Just v <- [tryApply (poly t) (poly u)] ]
 
 filterUniverse :: Typed f => Universe -> Enumerator (Term f) -> Enumerator (Term f)
-filterUniverse univ e =
-  filterEnumerator (`usefulForUniverse` univ) e
+filterUniverse univ = filterEnumerator (`usefulForUniverse` univ)
 
 sortTerms :: Ord b => (a -> b) -> Enumerator a -> Enumerator a
-sortTerms measure e =
-  mapEnumerator (sortBy' measure) e
+sortTerms measure = mapEnumerator (sortBy' measure)
 
 quickSpec ::
   (Ord fun, Ord norm, Sized fun, Typed fun, Ord result, PrettyTerm fun,

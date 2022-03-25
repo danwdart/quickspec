@@ -3,23 +3,23 @@
 {-# LANGUAGE CPP #-}
 module QuickSpec.Internal.Utils where
 
-import Control.Arrow((&&&))
-import Control.Exception
-import Control.Spoon
-import Data.List(groupBy, sortBy)
+import           Control.Arrow                    ((&&&))
+import           Control.Exception
+import           Control.Spoon
+import           Data.List                        (groupBy, sortBy)
 #if !MIN_VERSION_base(4,8,0)
-import Data.Monoid
+import           Data.Monoid
 #endif
-import Data.Ord(comparing)
-import System.IO
-import qualified Control.Category as Category
-import qualified Data.Map.Strict as Map
-import Data.Map(Map)
-import Language.Haskell.TH.Syntax
-import Data.Lens.Light
-import Twee.Base hiding (lookup)
-import Control.Monad.Trans.State.Strict
-import Control.Monad
+import qualified Control.Category                 as Category
+import           Control.Monad
+import           Control.Monad.Trans.State.Strict
+import           Data.Lens.Light
+import           Data.Map                         (Map)
+import qualified Data.Map.Strict                  as Map
+import           Data.Ord                         (comparing)
+import           Language.Haskell.TH.Syntax
+import           System.IO
+import           Twee.Base                        hiding (lookup)
 
 (#) :: Category.Category cat => cat b c -> cat a b -> cat a c
 (#) = (Category..)
@@ -104,7 +104,7 @@ isSubsequenceOf :: Ord a => [a] -> [a] -> Bool
 #endif
 
 appendAt :: Int -> [a] -> [[a]] -> [[a]]
-appendAt n xs [] = appendAt n xs [[]]
+appendAt n xs []       = appendAt n xs [[]]
 appendAt 0 xs (ys:yss) = (ys ++ xs):yss
 appendAt n xs (ys:yss) = ys:appendAt (n-1) xs yss
 

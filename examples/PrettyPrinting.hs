@@ -1,14 +1,17 @@
 -- Pretty-printing combinators.
 -- Illustrates observational equality and using custom generators.
 -- See the QuickSpec paper for more details.
-{-# LANGUAGE DeriveDataTypeable, TypeOperators, StandaloneDeriving, TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
-import Prelude hiding ((<>))
-import Control.Monad
-import Test.QuickCheck
-import QuickSpec
-import Text.PrettyPrint.HughesPJ hiding (Str)
-import Data.Proxy
-import Data.Constraint
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE StandaloneDeriving    #-}
+import           Control.Monad
+import           Data.Constraint
+import           Data.Proxy
+import           Prelude                   hiding ((<>))
+import           QuickSpec
+import           Test.QuickCheck
+import           Text.PrettyPrint.HughesPJ hiding (Str)
 
 deriving instance Typeable Doc
 
@@ -51,7 +54,7 @@ nesting d = head [ i | i <- nums, unindented (nest (-i) d) ]
 
 main = quickSpec [
   withMaxTermSize 9,
-  
+
   background [
     con "[]" ([] :: [A]),
     con "++" ((++) :: [A] -> [A] -> [A]),

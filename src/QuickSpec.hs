@@ -57,14 +57,15 @@
 -- You can also find some larger case studies in our paper,
 -- <http://www.cse.chalmers.se/~nicsma/papers/quickspec2.pdf Quick specifications for the busy programmer>.
 
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ExplicitNamespaces    #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE RankNTypes #-}
+
+{-# LANGUAGE AllowAmbiguousTypes   #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE RankNTypes            #-}
 module QuickSpec(
   -- * Running QuickSpec
   quickSpec, Sig, Signature(..),
@@ -78,7 +79,7 @@ module QuickSpec(
   monoType, monoTypeObserve, Observe(..), inst, generator,
   vars, monoTypeWithVars, monoTypeObserveWithVars,
   variableUse, VariableUse(..),
-  
+
   -- * Declaring types: @TypeApplication@-friendly variants
   mono, monoObserve, monoVars, monoObserveVars,
 
@@ -104,10 +105,11 @@ module QuickSpec(
   -- * Re-exported functionality
   Typeable, (:-)(..), Dict(..), Proxy(..), Arbitrary) where
 
-import QuickSpec.Internal
-import QuickSpec.Internal.Haskell(Observe(..), PrintStyle(..), (=~=))
-import QuickSpec.Internal.Type(A, B, C, D, E)
-import QuickSpec.Internal.Explore.Schemas(VariableUse(..))
-import Data.Typeable
-import Data.Constraint
-import Test.QuickCheck
+import           Data.Constraint
+import           Data.Typeable
+import           QuickSpec.Internal
+import           QuickSpec.Internal.Explore.Schemas (VariableUse (..))
+import           QuickSpec.Internal.Haskell         (Observe (..),
+                                                     PrintStyle (..), (=~=))
+import           QuickSpec.Internal.Type            (A, B, C, D, E)
+import           Test.QuickCheck

@@ -1,6 +1,6 @@
 -- A simple example testing arithmetic functions.
-import QuickSpec
-import Numeric.Natural
+import           Numeric.Natural
+import           QuickSpec
 
 main = quickSpec [
   series [

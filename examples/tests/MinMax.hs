@@ -1,8 +1,9 @@
-{-# LANGUAGE DeriveDataTypeable, GeneralizedNewtypeDeriving #-}
-import QuickSpec
-import Test.QuickCheck
-import Data.Monoid
-import Data.Typeable
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+import           Data.Monoid
+import           Data.Typeable
+import           QuickSpec
+import           Test.QuickCheck
 
 newtype Constant = Constant Integer deriving (Eq, Ord, Typeable, Num)
 instance Arbitrary Constant where
@@ -21,7 +22,7 @@ sig1 = [
   --con "2" (2 :: Constant),
   con "*" (\(Constant x) y -> x * y),
   monoTypeWithVars ["c", "d", "e"] (Proxy :: Proxy Constant) ]
-    
+
 sig2 = [
   con "min" (min :: Integer -> Integer -> Integer),
   con "max" (max :: Integer -> Integer -> Integer) ]

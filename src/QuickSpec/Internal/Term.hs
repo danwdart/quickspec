@@ -1,23 +1,35 @@
 -- | This module is internal to QuickSpec.
 --
 -- Typed terms and operations on them.
-{-# LANGUAGE PatternSynonyms, ViewPatterns, TypeSynonymInstances, FlexibleInstances, TypeFamilies, ConstraintKinds, DeriveGeneric, DeriveAnyClass, MultiParamTypeClasses, FunctionalDependencies, UndecidableInstances, TypeOperators, DeriveFunctor, FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds        #-}
+{-# LANGUAGE DeriveFunctor          #-}
+{-# LANGUAGE DeriveGeneric          #-}
+{-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE PatternSynonyms        #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE TypeOperators          #-}
+{-# LANGUAGE UndecidableInstances   #-}
+{-# LANGUAGE ViewPatterns           #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 module QuickSpec.Internal.Term(module QuickSpec.Internal.Term, module Twee.Base, module Twee.Pretty) where
 
-import QuickSpec.Internal.Type
-import QuickSpec.Internal.Utils
-import Control.Monad
-import GHC.Generics(Generic)
-import Test.QuickCheck(CoArbitrary(..))
-import Data.DList(DList)
-import qualified Data.DList as DList
-import Twee.Base(Pretty(..), PrettyTerm(..), TermStyle(..), EqualsBonus, prettyPrint)
-import Twee.Pretty
-import qualified Data.Map.Strict as Map
-import Data.Map(Map)
-import Data.List
-import Data.Ord
+import           Control.Monad
+import           Data.DList               (DList)
+import qualified Data.DList               as DList
+import           Data.List
+import           Data.Map                 (Map)
+import qualified Data.Map.Strict          as Map
+import           Data.Ord
+import           GHC.Generics             (Generic)
+import           QuickSpec.Internal.Type
+import           QuickSpec.Internal.Utils
+import           Test.QuickCheck          (CoArbitrary (..))
+import           Twee.Base                (EqualsBonus, Pretty (..),
+                                           PrettyTerm (..), TermStyle (..),
+                                           prettyPrint)
+import           Twee.Pretty
 
 -- | A typed term.
 data Term f = Var {-# UNPACK #-} !Var | Fun !f | !(Term f) :$: !(Term f)
@@ -75,8 +87,8 @@ class Symbolic f a | a -> f where
 
 instance Symbolic f (Term f) where
   termsDL = return
-  subst sub (Var x) = sub x
-  subst _ (Fun x) = Fun x
+  subst sub (Var x)   = sub x
+  subst _ (Fun x)     = Fun x
   subst sub (t :$: u) = subst sub t :$: subst sub u
 
 instance Symbolic f a => Symbolic f [a] where
@@ -95,7 +107,7 @@ instance Sized f => Sized (Term f) where
     -- to build many many terms without any constants at all
     case t of
       Var _ -> 1
-      _ -> 0
+      _     -> 0
 
 instance Pretty Var where
   pPrint x = parens $ text "X" <#> pPrint (var_id x+1) <+> text "::" <+> pPrint (var_ty x)
@@ -145,8 +157,8 @@ occVar x t = length (filter (== x) (vars t))
 
 -- | Map a function over variables.
 mapVar :: (Var -> Var) -> Term f -> Term f
-mapVar f (Var x) = Var (f x)
-mapVar _ (Fun x) = Fun x
+mapVar f (Var x)   = Var (f x)
+mapVar _ (Fun x)   = Fun x
 mapVar f (t :$: u) = mapVar f t :$: mapVar f u
 
 -- | Find all subterms of a term. Includes the term itself.
@@ -156,14 +168,14 @@ subterms t = t:properSubterms t
 -- | Find all subterms of a term. Does not include the term itself.
 properSubterms :: Term f -> [Term f]
 properSubterms (t :$: u) = subterms t ++ subterms u
-properSubterms _ = []
+properSubterms _         = []
 
 subtermsFO :: Term f -> [Term f]
 subtermsFO t = t:properSubtermsFO t
 
 properSubtermsFO :: Term f -> [Term f]
 properSubtermsFO (_f :@: ts) = concatMap subtermsFO ts
-properSubtermsFO _ = []
+properSubtermsFO _           = []
 
 -- | Renames variables so that they appear in a canonical order.
 -- Also makes sure that variables of different types have different numbers.
@@ -179,17 +191,17 @@ canonicalise t = subst (\x -> Map.findWithDefault undefined x sub) t
 evalTerm :: (Typed fun, Apply a, Monad m) => (Var -> m a) -> (fun -> m a) -> Term fun -> m a
 evalTerm var fun = eval
   where
-    eval (Var x) = var x
-    eval (Fun f) = fun f
+    eval (Var x)   = var x
+    eval (Fun f)   = fun f
     eval (t :$: u) = liftM2 apply (eval t) (eval u)
 
 instance Typed f => Typed (Term f) where
-  typ (Var x) = typ x
-  typ (Fun f) = typ f
+  typ (Var x)   = typ x
+  typ (Fun f)   = typ f
   typ (t :$: _) = typeDrop 1 (typ t)
 
-  otherTypesDL (Var _) = mempty
-  otherTypesDL (Fun f) = typesDL f
+  otherTypesDL (Var _)   = mempty
+  otherTypesDL (Fun f)   = typesDL f
   otherTypesDL (t :$: u) = typesDL t `mplus` typesDL u
 
   typeSubst_ sub = tsub
@@ -205,8 +217,8 @@ instance (PrettyTerm f, Typed f) => Apply (Term f) where
     return (t :$: u)
 
 depth :: Term f -> Int
-depth Var{} = 1
-depth Fun{} = 1
+depth Var{}     = 1
+depth Fun{}     = 1
 depth (t :$: u) = depth t `max` (1+depth u)
 
 -- | A standard term ordering - size, skeleton, generality.
@@ -220,8 +232,8 @@ measure t =
    -length (usort (vars t)), vars t)
   where
     skel (Var (V ty _)) = Var (V ty 0)
-    skel (Fun f) = Fun f
-    skel (t :$: u) = skel t :$: skel u
+    skel (Fun f)        = Fun f
+    skel (t :$: u)      = skel t :$: skel u
     -- Prefer fully-applied terms to partially-applied ones.
     -- This function counts how many unsaturated function applications
     -- occur in a term.
@@ -243,10 +255,10 @@ compareFuns (f :@: ts) (g :@: us) =
   compareHead f g `mappend` comparing (map MeasureFuns) ts us
   where
     compareHead (Var x) (Var y) = compare x y
-    compareHead (Var _) _ = LT
-    compareHead _ (Var _) = GT
+    compareHead (Var _) _       = LT
+    compareHead _ (Var _)       = GT
     compareHead (Fun f) (Fun g) = compare f g
-    compareHead _ _ = error "viewApp"
+    compareHead _ _             = error "viewApp"
 
 ----------------------------------------------------------------------
 -- * Data types a la carte-ish.

@@ -1,13 +1,19 @@
-{-# LANGUAGE DeriveFunctor, FlexibleInstances, TypeOperators, ScopedTypeVariables, FlexibleContexts, GADTs, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable  #-}
+{-# LANGUAGE DeriveFunctor       #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE FlexibleInstances   #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators       #-}
 module GenericStuff where
 
-import Prelude hiding (Either(..))
-import Test.QuickCheck
-import Test.QuickCheck.Gen.Unsafe
-import GHC.Generics
-import Data.Typeable
-import Control.Monad
-import Data.Monoid
+import           Control.Monad
+import           Data.Monoid
+import           Data.Typeable
+import           GHC.Generics
+import           Prelude                    hiding (Either (..))
+import           Test.QuickCheck
+import           Test.QuickCheck.Gen.Unsafe
 
 -- Generate a value generically.
 genericArbitrary :: forall a. (Typeable a, Arbitrary a, Generic a, GArbitrary (Rep a)) => Gen a
@@ -34,7 +40,7 @@ class GConstr f where
 -- Represents a generator for one constructor of a datatype
 data Constr a = Constr {
   -- The generator itself
-  gen :: Gen a,
+  gen       :: Gen a,
   -- Is the constructor recursive and if so, how many times does the datatype appear
   recursion :: Int
   } deriving Functor

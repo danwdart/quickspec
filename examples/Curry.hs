@@ -1,4 +1,4 @@
-import QuickSpec
+import           QuickSpec
 
 main = quickSpec [
   con "curry" (curry :: ((A, B) -> C) -> A -> B -> C),

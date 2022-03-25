@@ -1,16 +1,16 @@
 -- A window manager example,
 -- taken from http://donsbot.wordpress.com/2007/05/01/roll-your-own-window-manager-part-1-defining-and-testing-a-model
 
-import Data.Maybe
-import Data.Map (Map)
-import Data.Typeable
-import qualified Data.Map as M
-import qualified Data.List as L
-import Test.QuickCheck
-import Test.QuickCheck.Instances
-import Test.QuickCheck.Poly(OrdA)
-import QuickSpec
-import Numeric.Natural
+import qualified Data.List                 as L
+import           Data.Map                  (Map)
+import qualified Data.Map                  as M
+import           Data.Maybe
+import           Data.Typeable
+import           Numeric.Natural
+import           QuickSpec
+import           Test.QuickCheck
+import           Test.QuickCheck.Instances
+import           Test.QuickCheck.Poly      (OrdA)
 
 -- ---------------------------------------------------------------------
 -- A data structure for multiple workspaces containing stacks of screens
@@ -111,7 +111,7 @@ fromList (n,xs) | n < 0 || n >= fromIntegral (length xs)
                 = error $ "Cursor index is out of range: " ++ show (n, length xs)
 fromList (o,xs) = view o $
     foldr (\(i,ys) s ->
-        foldr (\a t -> insert a i t) s ys)
+        foldr (`insert` i) s ys)
             (empty (fromIntegral (length xs))) (zip [0..] xs)
 
 -- flatten a stackset to a list

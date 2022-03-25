@@ -1,11 +1,12 @@
-{-# LANGUAGE ScopedTypeVariables,DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable  #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
-import Prelude hiding (null)
-import QuickSpec
-import Test.QuickCheck
-import Test.QuickCheck.Poly(OrdA(..))
-import Data.Ord
-import qualified Data.List as L
+import qualified Data.List            as L
+import           Data.Ord
+import           Prelude              hiding (null)
+import           QuickSpec
+import           Test.QuickCheck
+import           Test.QuickCheck.Poly (OrdA (..))
 
 data Heap a = Nil | Branch Int a (Heap a) (Heap a) deriving Typeable
 
@@ -27,7 +28,7 @@ fromList = foldr insert Nil
 
 null :: Heap a -> Bool
 null Nil = True
-null _ = False
+null _   = False
 
 findMin :: Heap a -> a
 findMin (Branch _ x _ _) = x
@@ -50,7 +51,7 @@ merge h1@(Branch _ x1 l1 r1) h2@(Branch _ x2 l2 r2)
  | otherwise = merge h2 h1
 
 npl :: Heap a -> Int
-npl Nil = 0
+npl Nil              = 0
 npl (Branch n _ _ _) = n
 
 mergeLists :: Ord a => [a] -> [a] -> [a]

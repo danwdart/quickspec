@@ -1,35 +1,42 @@
 -- A pruner that uses twee. Does not respect types.
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE RecordWildCards, FlexibleContexts, FlexibleInstances, GADTs, PatternSynonyms, GeneralizedNewtypeDeriving, MultiParamTypeClasses, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE UndecidableInstances       #-}
 module QuickSpec.Internal.Pruning.UntypedTwee where
 
-import QuickSpec.Internal.Testing
-import QuickSpec.Internal.Pruning
-import QuickSpec.Internal.Prop
-import QuickSpec.Internal.Term
-import QuickSpec.Internal.Type
-import Data.Lens.Light
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Reader
+import           Control.Monad.Trans.State.Strict hiding (State)
+import           Data.Lens.Light
+import qualified Data.Map.Strict                  as Map
+import           Data.Set                         (Set)
+import qualified Data.Set                         as Set
+import           QuickSpec.Internal.Prop
+import           QuickSpec.Internal.Pruning
+import           QuickSpec.Internal.Term
+import           QuickSpec.Internal.Terminal
+import           QuickSpec.Internal.Testing
+import           QuickSpec.Internal.Type
+import           Twee                             hiding (Config (..))
 import qualified Twee
-import qualified Twee.Equation as Twee
-import qualified Twee.KBO as KBO
-import qualified Twee.Base as Twee
-import Twee hiding (Config(..))
-import Twee.Rule hiding (normalForms)
-import Twee.Proof hiding (Config, defaultConfig)
-import Twee.Base(Ordered(..), Arity(..), Labelled)
-import Control.Monad.Trans.Reader
-import Control.Monad.Trans.State.Strict hiding (State)
-import Control.Monad.Trans.Class
-import Control.Monad.IO.Class
-import QuickSpec.Internal.Terminal
-import qualified Data.Set as Set
-import Data.Set(Set)
-import qualified Data.Map.Strict as Map
+import           Twee.Base                        (Arity (..), Labelled,
+                                                   Ordered (..))
+import qualified Twee.Base                        as Twee
+import qualified Twee.Equation                    as Twee
+import qualified Twee.KBO                         as KBO
+import           Twee.Proof                       hiding (Config, defaultConfig)
+import           Twee.Rule                        hiding (normalForms)
 
 data Config =
   Config {
     cfg_max_term_size :: Int,
-    cfg_max_cp_depth :: Int }
+    cfg_max_cp_depth  :: Int }
 
 lens_max_term_size = lens cfg_max_term_size (\x y -> y { cfg_max_term_size = x })
 lens_max_cp_depth = lens cfg_max_cp_depth (\x y -> y { cfg_max_cp_depth = x })
@@ -41,15 +48,15 @@ instance (Ord fun, Typeable fun) => Labelled (Extended fun)
 
 instance Sized fun => Sized (Extended fun) where
   size (Function f) = size f
-  size _ = 1
+  size _            = 1
 
 instance KBO.Sized (Extended fun) where
   size _ = 1
 
 instance Arity fun => Arity (Extended fun) where
   arity (Function f) = arity f
-  arity (Skolem _) = 0
-  arity Minimal = 0
+  arity (Skolem _)   = 0
+  arity Minimal      = 0
 
 instance (Ord fun, Typeable fun) => Twee.Minimal (Extended fun) where
   minimal = Twee.fun Minimal
@@ -57,13 +64,13 @@ instance (Ord fun, Typeable fun) => Twee.Minimal (Extended fun) where
 instance EqualsBonus (Extended fun)
 
 instance (Ord fun, Typeable fun, Pretty fun) => Pretty (Extended fun) where
-  pPrintPrec l p (Function f) = pPrintPrec l p f
-  pPrintPrec _ _ Minimal = text "?"
+  pPrintPrec l p (Function f)        = pPrintPrec l p f
+  pPrintPrec _ _ Minimal             = text "?"
   pPrintPrec _ _ (Skolem (Twee.V x)) = text ("sk" ++ show x)
 
 instance (Ord fun, Typeable fun, PrettyTerm fun) => PrettyTerm (Extended fun) where
   termStyle (Function f) = termStyle f
-  termStyle _ = curried
+  termStyle _            = curried
 
 instance (Sized fun, Pretty fun, PrettyTerm fun, Ord fun, Typeable fun, Arity fun, EqualsBonus fun) => Ordered (Extended fun) where
   lessEq = KBO.lessEq

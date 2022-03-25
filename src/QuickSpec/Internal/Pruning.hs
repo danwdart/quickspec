@@ -1,14 +1,19 @@
 -- A type of pruners.
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, GeneralizedNewtypeDeriving, FlexibleInstances, UndecidableInstances, DefaultSignatures, GADTs #-}
+{-# LANGUAGE DefaultSignatures          #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FunctionalDependencies     #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE UndecidableInstances       #-}
 module QuickSpec.Internal.Pruning where
 
-import QuickSpec.Internal.Prop
-import QuickSpec.Internal.Testing
-import Control.Monad.Trans.Class
-import Control.Monad.IO.Class
-import Control.Monad.Trans.State.Strict
-import Control.Monad.Trans.Reader
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Reader
+import           Control.Monad.Trans.State.Strict
+import           QuickSpec.Internal.Prop
+import           QuickSpec.Internal.Testing
 
 class Monad m => MonadPruner term norm m | m -> term norm where
   normaliser :: m (term -> norm)
@@ -52,4 +57,4 @@ watchPruner :: Monad m => WatchPruner term m a -> m (a, [Prop term])
 watchPruner (WatchPruner mx) = do
   (x, props) <- runStateT mx []
   return (x, reverse props)
-    
+

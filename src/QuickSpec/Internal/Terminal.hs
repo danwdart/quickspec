@@ -1,12 +1,14 @@
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving, DefaultSignatures, GADTs #-}
+{-# LANGUAGE DefaultSignatures          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module QuickSpec.Internal.Terminal where
 
-import Control.Monad.Trans.Class
-import Control.Monad.IO.Class
-import Control.Monad.Trans.State.Strict
-import Control.Monad.Trans.Reader
-import qualified Test.QuickCheck.Text as Text
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Reader
+import           Control.Monad.Trans.State.Strict
+import qualified Test.QuickCheck.Text             as Text
 
 class Monad m => MonadTerminal m where
   putText :: String -> m ()

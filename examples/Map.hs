@@ -1,8 +1,8 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, TypeApplications, TypeOperators #-}
-import QuickSpec
-import qualified Data.Map as Map
-import Test.QuickCheck
-import Data.Map(Map)
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+import           Data.Map        (Map)
+import qualified Data.Map        as Map
+import           QuickSpec
+import           Test.QuickCheck
 
 newtype Key = Key Int deriving (Eq, Ord, Arbitrary)
 newtype Value = Value Int deriving (Eq, Ord, Arbitrary)

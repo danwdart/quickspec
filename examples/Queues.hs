@@ -1,8 +1,10 @@
-{-# LANGUAGE TypeOperators, GeneralizedNewtypeDeriving, TypeApplications #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeApplications           #-}
+{-# LANGUAGE TypeOperators              #-}
 
-import QuickSpec
-import Test.QuickCheck
-import Prelude hiding (fst)
+import           Prelude         hiding (fst)
+import           QuickSpec
+import           Test.QuickCheck
 
 newtype Queue a = Queue [a] deriving (Eq, Ord, Arbitrary, CoArbitrary)
 nil = Queue []

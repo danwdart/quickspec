@@ -1,8 +1,7 @@
 -- A simple example testing arithmetic functions.
-{-# LANGUAGE TypeOperators
-           , TypeApplications
-#-}
-import QuickSpec
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeOperators    #-}
+import           QuickSpec
 
 -- Integers
 main = quickSpec [ con "0" (liftC 0   :: Num A ==> A)

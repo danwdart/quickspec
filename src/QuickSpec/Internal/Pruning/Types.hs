@@ -1,19 +1,24 @@
 -- Encode monomorphic types during pruning.
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE RecordWildCards, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, ScopedTypeVariables, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE UndecidableInstances       #-}
 module QuickSpec.Internal.Pruning.Types where
 
-import QuickSpec.Internal.Pruning
-import QuickSpec.Internal.Pruning.Background(Background(..))
-import QuickSpec.Internal.Testing
-import QuickSpec.Internal.Term
-import QuickSpec.Internal.Type
-import QuickSpec.Internal.Prop
-import QuickSpec.Internal.Terminal
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
-import qualified Twee.Base as Twee
-import Twee.Base(Arity(..))
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
+import           QuickSpec.Internal.Prop
+import           QuickSpec.Internal.Pruning
+import           QuickSpec.Internal.Pruning.Background (Background (..))
+import           QuickSpec.Internal.Term
+import           QuickSpec.Internal.Terminal
+import           QuickSpec.Internal.Testing
+import           QuickSpec.Internal.Type
+import           Twee.Base                             (Arity (..))
+import qualified Twee.Base                             as Twee
 
 data Tagged fun =
     Func fun
@@ -22,11 +27,11 @@ data Tagged fun =
 
 instance Arity fun => Arity (Tagged fun) where
   arity (Func f) = arity f
-  arity (Tag _) = 1
+  arity (Tag _)  = 1
 
 instance Sized fun => Sized (Tagged fun) where
   size (Func f) = size f
-  size (Tag _) = 0
+  size (Tag _)  = 0
 
 instance Pretty fun => Pretty (Tagged fun) where
   pPrint (Func f) = pPrint f
@@ -34,7 +39,7 @@ instance Pretty fun => Pretty (Tagged fun) where
 
 instance PrettyTerm fun => PrettyTerm (Tagged fun) where
   termStyle (Func f) = termStyle f
-  termStyle (Tag _) = uncurried
+  termStyle (Tag _)  = uncurried
 
 instance EqualsBonus (Tagged fun) where
 

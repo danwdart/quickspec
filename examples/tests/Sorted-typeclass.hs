@@ -1,12 +1,14 @@
-{-# LANGUAGE FlexibleContexts, RankNTypes, ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds  #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes       #-}
 -- Sorting and sorted lists.
 -- Illustrates testing of conditional laws.
-import QuickSpec
-import Data.List
+import           Data.List
+import           QuickSpec
 
 sorted :: Ord a => [a] -> Bool
-sorted [] = True
-sorted [_] = True
+sorted []       = True
+sorted [_]      = True
 sorted (x:y:xs) = x <= y && sorted (y:xs)
 
 lift :: (c => a) -> Dict c -> a

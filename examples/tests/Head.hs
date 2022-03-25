@@ -1,5 +1,5 @@
 -- Partial functions.
-import QuickSpec
+import           QuickSpec
 
 main = quickSpec [
   con "head" (head :: [A] -> A),

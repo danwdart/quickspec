@@ -1,19 +1,25 @@
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE DeriveGeneric, TypeFamilies, DeriveFunctor, FlexibleInstances, MultiParamTypeClasses, UndecidableInstances, FlexibleContexts, TypeOperators #-}
+{-# LANGUAGE DeriveFunctor         #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 module QuickSpec.Internal.Prop where
 
-import Data.Bool (bool)
-import Control.Monad
-import qualified Data.DList as DList
-import Data.Ord
-import QuickSpec.Internal.Type
-import QuickSpec.Internal.Utils
-import QuickSpec.Internal.Term hiding (first)
-import GHC.Generics(Generic)
-import qualified Data.Map.Strict as Map
-import Control.Monad.Trans.State.Strict
-import Data.List
-import Control.Arrow (first)
+import           Control.Arrow                    (first)
+import           Control.Monad
+import           Control.Monad.Trans.State.Strict
+import           Data.Bool                        (bool)
+import qualified Data.DList                       as DList
+import           Data.List
+import qualified Data.Map.Strict                  as Map
+import           Data.Ord
+import           GHC.Generics                     (Generic)
+import           QuickSpec.Internal.Term          hiding (first)
+import           QuickSpec.Internal.Type
+import           QuickSpec.Internal.Utils
 
 data Prop a =
   (:=>:) {
@@ -93,7 +99,7 @@ prettyPropQC ::
   (Typed fun, Apply (Term fun), PrettyTerm fun) =>
   Type -> (Type -> Bool) -> Int -> (Type -> [String]) -> Prop (Term fun) -> Doc
 prettyPropQC default_to was_observed nth cands x
-  = hang (text first_char <+> text "(" <+> ((text $ show $ show $ pPrint law))) 2
+  = hang (text first_char <+> text "(" <+> (text $ show $ show $ pPrint law)) 2
   $ hang (hsep [text ",", text "property", text "$"]) 4
   $ hang ppr_binds 4
   $ (ppr_ctx <+> with_sig lhs lhs_type <+> eq_fn <+> pPrint rhs) <> text ")"
@@ -110,7 +116,7 @@ prettyPropQC default_to was_observed nth cands x
     ppr_ctx =
       case length ctx of
         0 -> pPrintEmpty
-        _ -> (hsep $ punctuate (text " &&") $ fmap (parens . pPrint) ctx) <+> text "==>"
+        _ -> hsep (punctuate (text " &&") $ fmap (parens . pPrint) ctx) <+> text "==>"
 
     (_ :=>: (lhs_for_type :=: _)) = x
     (var_defs, law@(ctx :=>: (lhs :=: rhs))) = nameVars cands x
@@ -119,15 +125,15 @@ prettyPropQC default_to was_observed nth cands x
     ppr_binds =
       case Map.size var_defs of
         0 -> pPrintEmpty
-        _ -> (text "\\ " <> sep (fmap (uncurry print_sig) (fmap (first text) $ Map.assocs var_defs))) <+> text "->"
+        _ -> (text "\\ " <> sep (fmap ((uncurry print_sig) . (first text)) (Map.assocs var_defs))) <+> text "->"
 
 
 data Named fun = Name String | Ordinary fun
 instance Pretty fun => Pretty (Named fun) where
-  pPrintPrec _ _ (Name name) = text name
+  pPrintPrec _ _ (Name name)    = text name
   pPrintPrec l p (Ordinary fun) = pPrintPrec l p fun
 instance PrettyTerm fun => PrettyTerm (Named fun) where
-  termStyle Name{} = curried
+  termStyle Name{}         = curried
   termStyle (Ordinary fun) = termStyle fun
 
 nameVars :: (Type -> [String]) -> Prop (Term fun) -> (Map.Map String Type, Prop (Term (Named fun)))
@@ -135,7 +141,7 @@ nameVars cands p =
   (var_defs, subst (\x -> Map.findWithDefault undefined x sub) (fmap (fmap Ordinary) p))
   where
     sub = Map.fromList sub_map
-    (sub_map, var_defs) = (runState (mapM assign (nub (vars p))) Map.empty)
+    (sub_map, var_defs) = runState (mapM assign (nub (vars p))) Map.empty
     assign x = do
       s <- get
       let ty = typ x

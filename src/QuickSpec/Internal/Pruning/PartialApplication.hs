@@ -1,18 +1,23 @@
 -- Pruning support for partial application and the like.
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE FlexibleInstances, TypeSynonymInstances, RecordWildCards, MultiParamTypeClasses, FlexibleContexts, GeneralizedNewtypeDeriving, UndecidableInstances, DeriveFunctor #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE UndecidableInstances       #-}
 module QuickSpec.Internal.Pruning.PartialApplication where
 
-import QuickSpec.Internal.Term
-import QuickSpec.Internal.Type
-import QuickSpec.Internal.Pruning.Background hiding (Pruner)
-import QuickSpec.Internal.Pruning
-import QuickSpec.Internal.Prop
-import QuickSpec.Internal.Terminal
-import QuickSpec.Internal.Testing
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
-import Twee.Base(Arity(..))
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
+import           QuickSpec.Internal.Prop
+import           QuickSpec.Internal.Pruning
+import           QuickSpec.Internal.Pruning.Background hiding (Pruner)
+import           QuickSpec.Internal.Term
+import           QuickSpec.Internal.Terminal
+import           QuickSpec.Internal.Testing
+import           QuickSpec.Internal.Type
+import           Twee.Base                             (Arity (..))
 
 data PartiallyApplied f =
     -- A partially-applied function symbol.
@@ -25,26 +30,26 @@ data PartiallyApplied f =
 
 instance Sized f => Sized (PartiallyApplied f) where
   size (Partial f _) = size f
-  size (Apply _) = 1
+  size (Apply _)     = 1
 
 instance Arity (PartiallyApplied f) where
   arity (Partial _ n) = n
-  arity (Apply _) = 2
+  arity (Apply _)     = 2
 
 instance Pretty f => Pretty (PartiallyApplied f) where
   pPrint (Partial f n) = pPrint f <#> text "@" <#> pPrint n
-  pPrint (Apply _) = text "$"
+  pPrint (Apply _)     = text "$"
 
 instance PrettyTerm f => PrettyTerm (PartiallyApplied f) where
   termStyle (Partial f _) = termStyle f
-  termStyle (Apply _) = infixStyle 2
+  termStyle (Apply _)     = infixStyle 2
 
 instance Typed f => Typed (PartiallyApplied f) where
-  typ (Apply ty) = arrowType [ty] ty
+  typ (Apply ty)    = arrowType [ty] ty
   typ (Partial f _) = typ f
-  otherTypesDL (Apply _) = mempty
+  otherTypesDL (Apply _)     = mempty
   otherTypesDL (Partial f _) = otherTypesDL f
-  typeSubst_ sub (Apply ty) = Apply (typeSubst_ sub ty)
+  typeSubst_ sub (Apply ty)    = Apply (typeSubst_ sub ty)
   typeSubst_ sub (Partial f n) = Partial (typeSubst_ sub f) n
 
 partial :: f -> Term (PartiallyApplied f)
@@ -67,7 +72,7 @@ simpleApply t u =
 
 instance (Typed f, Background f) => Background (PartiallyApplied f) where
   background (Partial f _) =
-    map (mapFun (\f -> Partial f arity)) (background f) ++
+    map (mapFun (`Partial` arity)) (background f) ++
     [ simpleApply (partial n) (vs !! n) === partial (n+1)
     | n <- [0..arity-1] ]
     where
@@ -96,6 +101,6 @@ instance (PrettyTerm fun, Typed fun, MonadPruner (Term (PartiallyApplied fun)) n
       add (encode <$> canonicalise prop)
 
 encode :: Typed fun => Term fun -> Term (PartiallyApplied fun)
-encode (Var x) = Var x
-encode (Fun f) = partial f
+encode (Var x)   = Var x
+encode (Fun f)   = partial f
 encode (t :$: u) = smartApply (encode t) (encode u)

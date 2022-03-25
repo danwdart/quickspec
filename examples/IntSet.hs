@@ -1,8 +1,8 @@
 -- Laws about Data.IntSet.
 -- Illustrates user-defined data types.
-import QuickSpec
+import           Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
-import Data.IntSet(IntSet)
+import           QuickSpec
 
 main = quickSpec [
   monoType (Proxy :: Proxy IntSet),
@@ -14,7 +14,7 @@ main = quickSpec [
       con "union" IntSet.union,
       con "intersection" IntSet.intersection,
       con "empty" IntSet.empty ]
-    
+
     sig2 = [
       con "insert" IntSet.insert,
       con "delete" IntSet.delete ]

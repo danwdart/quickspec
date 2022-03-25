@@ -1,7 +1,7 @@
 -- Just for testing polymorphic generalisation
 
-import QuickSpec
-import Data.Monoid
+import           Data.Monoid
+import           QuickSpec
 
 main =
   quickSpec [series [sig1, sig2]]

@@ -3,17 +3,17 @@
 {-# LANGUAGE RecordWildCards #-}
 module QuickSpec.Internal.Testing.DecisionTree where
 
+import           Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Map(Map)
 
 data DecisionTree testcase result term =
   DecisionTree {
     -- A function for evaluating terms on test cases.
-    dt_evaluate :: term -> testcase -> result,
+    dt_evaluate   :: term -> testcase -> result,
     -- The set of test cases gathered so far.
     dt_test_cases :: [testcase],
     -- The tree itself.
-    dt_tree :: !(Maybe (InnerTree result term)) }
+    dt_tree       :: !(Maybe (InnerTree result term)) }
 
 data InnerTree result term =
     TestCase !(Map result (InnerTree result term))
@@ -51,7 +51,7 @@ insert x dt@DecisionTree{dt_tree = Just dt_tree, ..} =
     aux _ [] (Singleton y) = EqualTo y
     aux k (t:ts) (Singleton y) =
       aux k (t:ts) $
-        TestCase (Map.singleton (dt_evaluate y t) (Singleton y)) 
+        TestCase (Map.singleton (dt_evaluate y t) (Singleton y))
     aux k (t:ts) (TestCase res) =
       let
         val = dt_evaluate x t
@@ -67,9 +67,9 @@ insert x dt@DecisionTree{dt_tree = Just dt_tree, ..} =
 data Statistics =
   Statistics {
     -- Total number of terms in the decision tree
-    stat_num_terms :: !Int,
+    stat_num_terms      :: !Int,
     -- Total number of tests executed
-    stat_num_tests :: !Int,
+    stat_num_tests      :: !Int,
     -- Number of distinct test cases used
     stat_num_test_cases :: !Int }
   deriving (Eq, Show)

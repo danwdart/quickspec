@@ -1,8 +1,8 @@
-{-# LANGUAGE TypeApplications #-}
-import Control.Monad
-import Test.QuickCheck
-import QuickSpec
-import Data.Dynamic
+
+import           Control.Monad
+import           Data.Dynamic
+import           QuickSpec
+import           Test.QuickCheck
 
 sig =
   signature {
@@ -19,7 +19,7 @@ sig =
    }
 
 foo :: Int -> Int
-foo 0  = bar
+foo 0 = bar
 foo 1 = bar
 foo x = bar + x
 

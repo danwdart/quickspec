@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-import QuickSpec
-import Test.QuickCheck
+import           QuickSpec
+import           Test.QuickCheck
 
 data Table9Point1 = I | A | B | C | D deriving (Eq, Ord, Show, Typeable)
 

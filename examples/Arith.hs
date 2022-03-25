@@ -1,5 +1,5 @@
 -- A simple example testing arithmetic functions.
-import QuickSpec
+import           QuickSpec
 
 main = quickSpec [
   con "0" (0 :: Int),

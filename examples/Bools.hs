@@ -1,5 +1,5 @@
 -- Testing functions on booleans. "not x" is used as a condition.
-import QuickSpec
+import           QuickSpec
 
 main = quickSpec [
   predicate "not" not,

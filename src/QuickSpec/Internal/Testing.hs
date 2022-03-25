@@ -1,12 +1,16 @@
 -- A type of test case generators.
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, DefaultSignatures, GADTs, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE DefaultSignatures      #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GADTs                  #-}
+{-# LANGUAGE UndecidableInstances   #-}
 module QuickSpec.Internal.Testing where
 
-import QuickSpec.Internal.Prop
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.State.Strict
-import Control.Monad.Trans.Reader
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Reader
+import           Control.Monad.Trans.State.Strict
+import           QuickSpec.Internal.Prop
 
 class Monad m => MonadTester testcase term m | m -> testcase term where
   test :: Prop term -> m (Maybe testcase)

@@ -1,11 +1,13 @@
 -- The octonions, made using the Cayley-Dickson construction.
-{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveDataTypeable, FlexibleInstances #-}
-import Data.Ratio
-import QuickSpec
-import Test.QuickCheck
-import Twee.Pretty
-import Control.Monad
-import Data.Proxy
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+import           Control.Monad
+import           Data.Proxy
+import           Data.Ratio
+import           QuickSpec
+import           Test.QuickCheck
+import           Twee.Pretty
 
 newtype SmallRational = SmallRational Rational
   deriving (Eq, Ord, Num, Typeable, Fractional, Conj, CoArbitrary, Show)
@@ -55,6 +57,6 @@ main = quickSpec [
   -- One test suffices :)
   withMaxTests 1,
   con "*" ((*) :: It -> It -> It),
-  (con "inv" (recip :: It -> It)),
+  con "inv" (recip :: It -> It),
   con "1" (1 :: It),
   monoType (Proxy :: Proxy It)]

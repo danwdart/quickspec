@@ -1,12 +1,12 @@
 -- Pretty-printing combinators, testing against a model implementation.
 -- Illustrates running QuickSpec on a progressively larger set of signatures.
 -- See the QuickSpec paper for more details.
-{-# LANGUAGE DeriveDataTypeable, TypeOperators #-}
-import Prelude hiding ((<>))
-import Control.Monad
-import Test.QuickCheck
-import QuickSpec
-import Data.Proxy
+{-# LANGUAGE DeriveDataTypeable #-}
+import           Control.Monad
+import           Data.Proxy
+import           Prelude         hiding ((<>))
+import           QuickSpec
+import           Test.QuickCheck
 
 newtype Layout = Layout [(Int, String)]
   deriving (Typeable, Eq, Ord, Show)

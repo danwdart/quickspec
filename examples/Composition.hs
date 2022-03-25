@@ -1,5 +1,5 @@
 -- Function composition.
-import QuickSpec
+import           QuickSpec
 
 main = quickSpec [
   con "id" (id :: A -> A),

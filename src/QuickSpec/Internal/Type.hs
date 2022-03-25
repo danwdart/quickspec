@@ -1,7 +1,21 @@
 -- | This module is internal to QuickSpec.
 --
 -- Polymorphic types and dynamic values.
-{-# LANGUAGE DeriveDataTypeable, ScopedTypeVariables, EmptyDataDecls, TypeSynonymInstances, FlexibleInstances, GeneralizedNewtypeDeriving, Rank2Types, ExistentialQuantification, PolyKinds, TypeFamilies, FlexibleContexts, StandaloneDeriving, PatternGuards, MultiParamTypeClasses, ConstraintKinds, DataKinds, GADTs #-}
+{-# LANGUAGE ConstraintKinds            #-}
+{-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE ExistentialQuantification  #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE PatternGuards              #-}
+{-# LANGUAGE PolyKinds                  #-}
+{-# LANGUAGE Rank2Types                 #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE TypeFamilies               #-}
 -- To avoid a warning about TyVarNumber's constructor being unused:
 {-# OPTIONS_GHC -fno-warn-unused-binds #-}
 module QuickSpec.Internal.Type(
@@ -24,20 +38,20 @@ module QuickSpec.Internal.Type(
   unwrap, Unwrapped(..), Wrapper(..),
   mapValue, forValue, ofValue, withValue, pairValues, wrapFunctor, unwrapFunctor, bringFunctor) where
 
-import Control.Monad
-import Data.DList(DList)
-import Data.Maybe
-import qualified Data.Typeable as Ty
-import Data.Typeable(Typeable)
-import GHC.Exts(Any)
-import Test.QuickCheck
-import Unsafe.Coerce
-import Data.Constraint
-import Twee.Base
-import Data.Proxy
-import Data.List
-import Data.Char
-import Data.Functor.Identity
+import           Control.Monad
+import           Data.Char
+import           Data.Constraint
+import           Data.DList            (DList)
+import           Data.Functor.Identity
+import           Data.List
+import           Data.Maybe
+import           Data.Proxy
+import           Data.Typeable         (Typeable)
+import qualified Data.Typeable         as Ty
+import           GHC.Exts              (Any)
+import           Test.QuickCheck
+import           Twee.Base             hiding (singleton)
+import           Unsafe.Coerce
 
 -- | A (possibly polymorphic) type.
 type Type = Term TyCon
@@ -56,9 +70,9 @@ data TyCon =
 instance Labelled TyCon
 
 instance Pretty TyCon where
-  pPrint Arrow = text "->"
+  pPrint Arrow      = text "->"
   pPrint (String x) = text x
-  pPrint (TyCon x) = text (show x)
+  pPrint (TyCon x)  = text (show x)
 instance PrettyTerm TyCon where
   termStyle Arrow =
     fixedArity 2 $
@@ -145,7 +159,7 @@ typeFromTyCon tc = build (con (fun tc))
 -- For example, @applyType (typeRep (Proxy :: Proxy [])) (typeRep (Proxy :: Proxy Int)) == typeRep (Proxy :: Proxy [Int])@.
 applyType :: Type -> Type -> Type
 applyType (App f tys) ty = build (app f (unpack tys ++ [ty]))
-applyType _ _ = error "tried to apply type variable"
+applyType _ _            = error "tried to apply type variable"
 
 -- | Construct a function type.
 arrowType :: [Type] -> Type -> Type
@@ -293,7 +307,7 @@ class Typed a where
 -- | Substitute for all type variables in a `Typed`.
 {-# INLINE typeSubst #-}
 typeSubst :: (Typed a, Substitution s, SubstFun s ~ TyCon) => s -> a -> a
-typeSubst s x = typeSubst_ (evalSubst s) x
+typeSubst s = typeSubst_ (evalSubst s)
 
 -- | A wrapper for using the `Twee.Base.Symbolic` machinery on types.
 newtype TypeView a = TypeView { unTypeView :: a }
@@ -375,9 +389,9 @@ instance (Typed a, Typed b) => Typed (Either a b) where
   typeSubst_ sub (Right x) = Right (typeSubst_ sub x)
 
 instance Typed a => Typed [a] where
-  typ [] = typeOf ()
+  typ []    = typeOf ()
   typ (x:_) = typ x
-  otherTypesDL [] = mzero
+  otherTypesDL []     = mzero
   otherTypesDL (x:xs) = otherTypesDL x `mplus` msum (map typesDL xs)
   typeSubst_ f xs = map (typeSubst_ f) xs
 
@@ -418,8 +432,7 @@ polyPair = polyApply (,)
 
 -- | Rename the type variables of all arguments so that they don't overlap.
 polyList :: Typed a => [Poly a] -> Poly [a]
-polyList [] = poly []
-polyList (x:xs) = polyApply (:) x (polyList xs)
+polyList xs = foldr (polyApply (:)) (poly []) xs
 
 -- | Find the most general unifier of two types.
 polyMgu :: Poly Type -> Poly Type -> Maybe (Poly Type)
@@ -454,7 +467,7 @@ toPolyValue = poly . toValue . pure
 data Value f =
   Value {
     valueType :: Type,
-    value :: f Any }
+    value     :: f Any }
 
 instance Show (Value f) where
   show x = "<<" ++ prettyShow (typ x) ++ ">>"
@@ -488,7 +501,7 @@ unwrap :: Value f -> Unwrapped f
 unwrap x =
   value x `In`
     Wrapper
-      (\y -> Value (typ x) y)
+      (Value (typ x))
       (\y ->
         if typ x == typ y
         then fromAny (value y)
@@ -503,7 +516,7 @@ data Unwrapped f where
 data Wrapper a =
   Wrapper {
     -- | Wrap up a value which has the same existential type as this one.
-    wrap :: forall g. g a -> Value g,
+    wrap     :: forall g. g a -> Value g,
     -- | Unwrap a value which has the same existential type as this one.
     reunwrap :: forall g. Value g -> g a }
 
@@ -550,13 +563,11 @@ unwrapFunctor :: forall f g h. Typeable g => (forall a. f (g a) -> h a) -> Value
 unwrapFunctor f x =
   case typ x of
     App _ tys | tys@(_:_) <- unpack tys ->
-      case ty `applyType` last tys == typ x of
-        True ->
-          Value {
-            valueType = last tys,
-            value = f (fromAny (value x)) }
-        False ->
-          error "non-matching types"
+      if ty `applyType` last tys == typ x then
+        Value {
+          valueType = last tys,
+          value = f (fromAny (value x)) } else
+        error "non-matching types"
     _ -> error "value of type f a had wrong type"
   where
     ty = typeRep (Proxy :: Proxy g)

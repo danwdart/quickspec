@@ -1,6 +1,6 @@
-import Prelude hiding (cycle, flip)
-import qualified Diagrams.Prelude as D
 import qualified Diagrams.Backend.SVG as D
+import qualified Diagrams.Prelude     as D
+import           Prelude              hiding (cycle, flip)
 
 type Drawing = D.Diagram D.SVG D.R2
 
@@ -17,14 +17,14 @@ image :: FilePath -> IO Drawing
 image file = do
   res <- D.loadImageEmb file
   case res of
-    Left err -> error (show err)
+    Left err  -> error (show err)
     Right img -> return (prim (D.image img))
 
 over, above, above', beside :: Drawing -> Drawing -> Drawing
 beside x y = prim (D.scaleX (1/2) x D.||| D.scaleX (1/2) y)
 above x y = prim (D.scaleY (1/2) x D.=== D.scaleY (1/2) y)
 above' x y = prim (D.scaleY (1/2) y D.=== D.scaleY (1/2) x)
-over x y = D.atop x y
+over = D.atop
 
 rot :: Drawing -> Drawing
 rot = D.rotate (90 D.@@ D.deg)
@@ -41,7 +41,7 @@ cycle x = quartet x (rot (rot (rot x))) (rot x) (rot (rot x))
 cycle' x = quartet' x (rot (rot (rot x))) (rot x) (rot (rot x))
 anticycle x = quartet x (rot x) (rot (rot (rot x))) (rot (rot x))
 
-render file dia = D.renderSVG file (D.Width size) dia
+render file = D.renderSVG file (D.Width size)
 
 main = do
   img <- image "whatever.png"

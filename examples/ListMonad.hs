@@ -1,6 +1,6 @@
 -- The monad laws for lists.
-import Control.Monad
-import QuickSpec
+import           Control.Monad
+import           QuickSpec
 
 main = quickSpec [
   withMaxTestSize 20,

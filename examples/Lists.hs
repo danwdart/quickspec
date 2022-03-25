@@ -1,6 +1,9 @@
 -- Some usual list functions.
-{-# LANGUAGE ScopedTypeVariables, ConstraintKinds, RankNTypes, ConstraintKinds, FlexibleContexts #-}
-import QuickSpec
+{-# LANGUAGE ConstraintKinds     #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+import           QuickSpec
 
 main = quickSpec [
   con "reverse" (reverse :: [A] -> [A]),

@@ -1,30 +1,30 @@
 {-# OPTIONS_HADDOCK hide #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE PatternGuards #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE UndecidableInstances       #-}
+
+
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE PatternGuards              #-}
+{-# LANGUAGE RecordWildCards            #-}
 module QuickSpec.Internal.Explore.Conditionals where
 
-import QuickSpec.Internal.Prop
-import QuickSpec.Internal.Term
-import QuickSpec.Internal.Type
-import QuickSpec.Internal.Pruning
-import QuickSpec.Internal.Pruning.Background(Background(..))
-import QuickSpec.Internal.Testing
-import QuickSpec.Internal.Terminal
-import QuickSpec.Internal.Utils
-import QuickSpec.Internal.Explore.Polymorphic
-import qualified Twee.Base as Twee
-import Data.List
-import Control.Monad
-import Control.Monad.Trans.Class
-import Control.Monad.IO.Class
+import           Control.Monad
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
+import           Data.List
+import           QuickSpec.Internal.Explore.Polymorphic
+import           QuickSpec.Internal.Prop
+import           QuickSpec.Internal.Pruning
+import           QuickSpec.Internal.Pruning.Background  (Background (..))
+import           QuickSpec.Internal.Term
+import           QuickSpec.Internal.Terminal
+import           QuickSpec.Internal.Testing
+import           QuickSpec.Internal.Type
+import           QuickSpec.Internal.Utils
+import qualified Twee.Base                              as Twee
 
 newtype Conditionals m a = Conditionals (m a)
   deriving (Functor, Applicative, Monad, MonadIO, MonadTester testcase term, MonadTerminal)
@@ -46,7 +46,7 @@ conditionalsUniverse :: (Typed fun, Predicate fun) => [Type] -> [fun] -> Univers
 conditionalsUniverse tys funs =
   universe $
     tys ++
-    (map typ $
+    map typ (
       map Normal funs ++
       [ Constructor pred clas_test_case | pred <- funs, Predicate{..} <- [classify pred] ])
 
@@ -74,26 +74,26 @@ data WithConstructor fun =
 
 instance Sized fun => Sized (WithConstructor fun) where
   size Constructor{} = 0
-  size (Normal f) = size f
+  size (Normal f)    = size f
 
 instance Pretty fun => Pretty (WithConstructor fun) where
   pPrintPrec l p (Constructor f _) = pPrintPrec l p f <#> text "_con"
-  pPrintPrec l p (Normal f) = pPrintPrec l p f
+  pPrintPrec l p (Normal f)        = pPrintPrec l p f
 
 instance PrettyTerm fun => PrettyTerm (WithConstructor fun) where
   termStyle (Constructor _ _) = curried
-  termStyle (Normal f) = termStyle f
+  termStyle (Normal f)        = termStyle f
 
 instance (Predicate fun, Background fun) => Background (WithConstructor fun) where
   background (Normal f) = map (mapFun Normal) (background f)
-  background _ = []
+  background _          = []
 
 instance Typed fun => Typed (WithConstructor fun) where
   typ (Constructor pred ty) =
     arrowType (typeArgs (typ pred)) ty
   typ (Normal f) = typ f
   otherTypesDL (Constructor pred _) = typesDL pred
-  otherTypesDL (Normal f) = otherTypesDL f
+  otherTypesDL (Normal f)           = otherTypesDL f
   typeSubst_ sub (Constructor pred ty) = Constructor (typeSubst_ sub pred) (typeSubst_ sub ty)
   typeSubst_ sub (Normal f) = Normal (typeSubst_ sub f)
 

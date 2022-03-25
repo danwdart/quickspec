@@ -1,5 +1,5 @@
-import QuickSpec
-import Test.QuickCheck hiding (NonZero)
+import           QuickSpec
+import           Test.QuickCheck hiding (NonZero)
 
 {- The universe of types -}
 
@@ -16,7 +16,7 @@ instance Arbitrary Odd where
   arbitrary = Odd <$> arbitrary `suchThat` odd
 
 {- NonZero <= Int -}
-nonZeroInt :: NonZero -> Int 
+nonZeroInt :: NonZero -> Int
 nonZeroInt (NonZero i) = i
 
 {- Odd <= Int -}

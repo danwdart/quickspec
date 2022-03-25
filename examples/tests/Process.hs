@@ -1,16 +1,15 @@
 -- A simple process calculus.
-{-# LANGUAGE DeriveDataTypeable
-           , GeneralizedNewtypeDeriving
-  #-}
-import Data.Maybe
-import Data.List hiding ((//))
-import Data.Char
-import Test.QuickCheck hiding ((><))
-import System.IO.Unsafe
-import System.Timeout
-import QuickSpec
-import QuickSpec.Internal.Utils
-import Data.Proxy
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+import           Data.Char
+import           Data.List                hiding ((//))
+import           Data.Maybe
+import           Data.Proxy
+import           QuickSpec
+import           QuickSpec.Internal.Utils
+import           System.IO.Unsafe
+import           System.Timeout
+import           Test.QuickCheck          hiding ((><))
 
 --------------------------------------------------------------------------------
 
@@ -62,8 +61,7 @@ instance Arbitrary Event where
   shrink Tau     = []
   shrink (In a)  = [ Tau, Out a ]
                 ++ [ In a' | a' <- shrink a ]
-  shrink (Out a) = [ Tau ]
-                ++ [ Out a' | a' <- shrink a ]
+  shrink (Out a) = Tau : [ Out a' | a' <- shrink a ]
 
 instance CoArbitrary Event where
   coarbitrary e = coarbitrary (show e)
@@ -83,7 +81,7 @@ instance Eq P where
   p == q = (p `compare` q) == EQ
 
 instance Ord P where
-  p `compare` q = 
+  p `compare` q =
     fromMaybe EQ (flattenTrace 10 (compareProcesses p q))
 
 instance Show P where
@@ -135,7 +133,7 @@ instance Arbitrary P where
   shrink (New a p) = [ p ]
                   ++ [ New a' p | a' <- shrink a ]
                   ++ [ New a p' | p' <- shrink p ]
-                  
+
 instance CoArbitrary P where
   coarbitrary p = coarbitrary (show p)
 
@@ -236,7 +234,7 @@ p = New a
     (     Act (Out a) Nil
       :|: Star (Act (In a)
             ( Act (Out b) Nil
-          :+: {- Act (Out c) -} (Act (Out a) Nil)
+          :+: {- Act (Out c) -} Act (Out a) Nil
             ))
     )
 
@@ -263,7 +261,7 @@ compareProcesses :: P -> P -> Trace
 compareProcesses p q = p ~~ q
  where
   h p = takeWhile (\s -> stepsLength s <= 10) [ steps i p | i <- [2..7] ]
-  stepsLength Stop = 0
+  stepsLength Stop      = 0
   stepsLength (Step xs) = length xs
 
   p ~~ q =
@@ -284,13 +282,13 @@ sig =
   , "#" `fun2` (#)
   , "a" `fun0` Name 'a'
   , "b" `fun0` Name 'b'
-  
+
   -- Event
   , ["E","D"] `vars` (undefined :: Event)
   , "?" `fun1` In
   , "!" `fun1` Out
   , "τ" `fun0` Tau
-  
+
   -- P
   , ["P","Q","R"] `vars` (undefined :: P)
   , background [
@@ -349,13 +347,13 @@ main = quickSpec [
   -- con "in"  In
   -- , con "out" Out
   -- , con "tau" Tau
-  
+
   -- Restricted processes
     con "/"    (\(P_ p) a -> p // a)
-  
+
   -- Restricted names
   , con "#"    (\(Name_ as) b -> head (filter (/=b) as))
-  
+
   -- P
   , con "0"    Nil
   -- , con "."    Act
@@ -366,11 +364,11 @@ main = quickSpec [
   , con "|"    (:|:)
   , con "*"   Star
   , con "new"  New
-  
+
   , monoTypeWithVars ["a","b","c"] (Proxy :: Proxy Name)
   , monoTypeWithVars ["c"] (Proxy :: Proxy Name_)
   -- , monoTypeWithVars ["e"]         (Proxy :: Proxy Event)
   , monoTypeWithVars ["p","q","r"] (Proxy :: Proxy P)
   , monoTypeWithVars ["r"] (Proxy :: Proxy P_)
-  
+
   , defaultTo (Proxy :: Proxy Bool) ]
