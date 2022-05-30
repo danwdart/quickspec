@@ -827,4 +827,4 @@ quickSpec cfg@Config{..} = do
     QuickCheck.run cfg_quickCheck (arbitraryTestCase cfg_default_to instances) eval $
     Twee.run cfg_twee { Twee.cfg_max_term_size = Twee.cfg_max_term_size cfg_twee `max` cfg_max_size } $
     runConditionals constants $
-    fmap (reverse . snd) $ flip execStateT (1, []) main)
+    ((reverse . snd) <$> flip execStateT (1, []) main))

@@ -114,7 +114,7 @@ newtype ColV = ColV {unColV :: T} deriving (Eq, Ord)
 instance Arbitrary RowV where
   arbitrary = RowV <$> oneof [return $ zero 1 dim, fromList 1 dim <$> infiniteList]
 instance Arbitrary ColV where
-  arbitrary = ColV <$> transpose <$> unRowV <$> arbitrary
+  arbitrary = (ColV <$> transpose) . unRowV <$> arbitrary
 
 times :: T -> T -> T
 times x y = scaleMatrix (1/2) (x*y+y*x)
@@ -125,7 +125,7 @@ pow n t | n > 0 = times t (pow (n-1) t)
 
 main = quickSpec [
   series [
-    background $
+    background
     [withMaxTermSize 7,
      -- Good pruning settings for Hard Maths (TM)
      --withPruningTermSize 9,
